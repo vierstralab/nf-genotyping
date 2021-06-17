@@ -7,50 +7,38 @@ params.dbsnp_filepath='/home/jvierstra/data/dbSNP/v151.hg38/All_20180418.fixed-c
 params.fasta_ancestral_filepath='/home/jvierstra/data/genomes/hg38/ancestral/homo_sapiens_ancestor_GRCh38/homo_sapiens_ancestor.fixed.fa'
 
 //genotyping caller parameters
+params.chunksize=5000000 //
 params.min_SNPQ=10 // Minimum SNP quality
 params.min_GQ=50 // Minimum genotype quality
 params.min_DP=12 // Minimum read depth over SNP
-params.hwe_cutoff=0.01 // Remove variants that are out of Hardy-Weinbery equilibrium
+params.hwe_cutoff=0.01 // Remove variants that are out of Hardy-Weinberg equilibrium
 
+
+// Read samples file
 Channel
 	.fromPath("/net/seq/data/projects/regulotyping-h.CD3+/metadata.txt")
 	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.donor_id, row.ds_number, row.ln_number, row.ag_number, file(row.bamfile) ) }
+	.map{ row -> tuple( row.donor_id, row.ag_number, row.bamfile ) }
 	.set{ SAMPLES_AGGREGATIONS }
 
-
-// This is a hack to deal with input files that have the same basename
-process symlink_input_files {
-	tag "${donor_id}:AG${ag_number}"
-	
-	executor 'local'	
-
-	input:
-	set val(donor_id), val(ds_number), val(ln_number), val(ag_number), file(bam_file) from SAMPLES_AGGREGATIONS
-
-	output:
-	set val(donor_id), file("*.bam") into SAMPLES_AGGREGATIONS_SYMLINKED
-
-	script:
-	"""
-	ln -s ${bam_file} "${ag_number}.bam"
-	"""
-}
-
-SAMPLES_AGGREGATIONS_SYMLINKED
+// Returns a tuple with donor id and BAM files to merge (string)
+// Cannnot use files here because basenames are the same 
+SAMPLES_AGGREGATIONS
 	.groupTuple(by:0)
+	.map{ it -> tuple(it[0], it[2].join(" ")) }
 	.set{ SAMPLES_AGGREGATIONS_MERGE }
 
+// Merge BAM files by inidividual
 process merge_bamfiles {
 	tag "${donor_id}"
 
 	cpus 2
 
 	input:
-	set val(donor_id), file(bam_files) from SAMPLES_AGGREGATIONS_MERGE
+	set val(donor_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
 
 	output:
-	file '*.bam*' into DONORS_MERGED
+	set val(donor_id), file("${donor_id}.bam"), file("${donor_id}.bam.bai") into DONORS_MERGED
 
 	script:
 	"""
@@ -59,12 +47,30 @@ process merge_bamfiles {
 	"""
 }
 
+DONORS_MERGED.into{ DONORS_MERGED_FILES; DONORS_MERGED_LIST }
 
+// Create sample map file which is used by bcftools to specific input BAM files
+DONORS_MERGED_LIST
+	.map{ [it[0], file(it[1]).name].join("\t") }
+	.collectFile(
+		name: 'sample_map.tsv',
+		newLine: true
+	)
+	.first()
+	.set{ DONORS_MERGED_SAMPLE_MAP_FILE }
+
+// Channel containing all files needed by bcftools to call genotypes (both VCF and its corresponding index)
+DONORS_MERGED_FILES
+	.flatMap{ [file(it[1]), file(it[2])] }
+	.set{ DONORS_MERGED_ALL_FILES }
+
+// Chunk genome up
 process create_genome_chunks {
 	executor 'local'
 
 	input:
 	file chromsizes from file(params.chromsizes_filepath)
+	val chunksize from params.chunksize
 
 	output:
 	stdout into GENOME_CHUNKS
@@ -72,7 +78,7 @@ process create_genome_chunks {
 	script:
 	"""
 	cat ${chromsizes} \
-  	| awk -v step=5000000 -v OFS="\t" \
+  	| awk -v step=${chunksize} -v OFS="\t" \
 		'{ \
 			for(i=step; i<=\$2; i+=step) { \
 				print \$1":"i-step+1"-"i; \
@@ -86,6 +92,7 @@ GENOME_CHUNKS
 	.flatMap{ it.split() }
 	.set{ GENOME_CHUNKS_MAP }
 
+// Call genotypes per region
 process call_genotypes {
 	tag "region: ${region}"
 	
@@ -104,14 +111,16 @@ process call_genotypes {
 	val hwe_cutoff from params.hwe_cutoff
 
 	val region from GENOME_CHUNKS_MAP
-	file bam_files from DONORS_MERGED.collect()
+	file '*' from DONORS_MERGED_ALL_FILES.collect()
+	file 'sample_map.tsv' from DONORS_MERGED_SAMPLE_MAP_FILE 
 
 	output:
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
 
 	script:
 	"""
-	ls *.bam > filelist.txt
+	cut -f1 sample_map.tsv > samples.txt
+	cut -f2 sample_map.tsv > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
@@ -135,8 +144,6 @@ process call_genotypes {
 	> ${region}.vcf.gz
 
 	bcftools index ${region}.vcf.gz
-
-	bcftools query -l ${region}.vcf.gz | grep -o "[^/]*\$" | sed "s/\\.bam//" > samples.txt
 
 	bcftools reheader \
 		-s samples.txt \
@@ -170,7 +177,7 @@ process call_genotypes {
 	"""
 }
 
-
+// Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 
 	scratch true
@@ -208,10 +215,8 @@ process merge_vcfs {
 	bcftools index all.filtered.snps.vcf.gz	
 
 	# Annotate ancestral allele
-	#
-	#
 	
-	echo "##INFO=<ID=AA,Number=1,Type=String,Description=\"Inferred ancestral allele-- EPO/PECAN alignments\">" > header.txt
+	echo "##INFO=<ID=AA,Number=1,Type=String,Description=\"Inferred ancestral allele -- EPO/PECAN alignments\">" > header.txt
 
 	# Contigs with ancestral allele information
 	faidx -i chromsizes ${fasta_ancestral} | cut -f1 > chroms.txt
