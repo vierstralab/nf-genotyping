@@ -25,17 +25,17 @@ A tab-delimited file containing information about each sample. The file must con
 </p>
 </details>
 
-<details><summary>Genome reference [``--genome``]</summary>
+<details><summary>Genome reference [--genome]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>dbSNP reference [``--dbsnp_file``]</summary>
+<details><summary>dbSNP reference [--dbsnp_file]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>Ancestral genome [``--genome_ancestral_fasta_file``]</summary>
+<details><summary>Ancestral genome [--genome_ancestral_fasta_file]</summary>
 <p></p>
 <p></p>
 </details>
@@ -43,32 +43,32 @@ A tab-delimited file containing information about each sample. The file must con
 
 
 ### Additonal Parameters:
-<details><summary>Chunk size [``--chunksize 5000000``]</summary>
+<details><summary>Chunk size [--chunksize 5000000]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>SNP quality [``--min_SNPQ 10``]</summary>
+<details><summary>SNP quality [--min_SNPQ 10]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>Genotype quality [``--min_GQ 50``]</summary>
+<details><summary>Genotype quality [--min_GQ 50]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>Sequencing depth [``--min_DP 12``]</summary>
+<details><summary>Sequencing depth [--min_DP 12]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>Hardy-Weinberg equilbrium [``--hwe_cutoff 0.01``]</summary>
+<details><summary>Hardy-Weinberg equilbrium [--hwe_cutoff 0.01]</summary>
 <p></p>
 <p></p>
 </details>
 
-<details><summary>Output directory [``--outdir .``]</summary>
+<details><summary>Output directory [--outdir .]</summary>
 <p></p>
 <p></p>
 </details>
