@@ -17,9 +17,10 @@ Samples BAM files are merged by corresponding individual and then used for a ``b
 <details><summary>Sample file [--samples_file]</summary>
 <p>
 A tab-delimited file containing information about each sample. The file must contain a header and the following columns (other columns are permitted and ignored):
-- **library_id:** Unique identifier for the each sample/dataset
-- **indiv:** Individual identifier for each sample; many samples can refer to one individual
-- **bamfile:** Absolute path the BAM-formated file
+<ul>
+	<li><strong>library_id:</strong> Unique identifier for the each sample/dataset</li>
+	<li><strong>indiv:</strong> Individual identifier for each sample; many samples can refer to one individual</li>
+	<li><strong>bamfile:</strong> Absolute path the BAM-formated file</li>
 </p>
 </details>
 
