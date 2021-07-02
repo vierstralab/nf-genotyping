@@ -16,7 +16,7 @@ Samples BAM files are merged by corresponding individual and then used for a ``b
 
 <details><summary>Sample file [--samples_file]</summary>
 <p>
-	A tab-delimited file containing information about each sample.
+	A tab-delimited file containing information about each sample. The file must contain a header and the following column (other columns are permitted and ignored):
 </p>
 </details>
 
@@ -73,9 +73,9 @@ Samples BAM files are merged by corresponding individual and then used for a ``b
 
 The pipeline outputs a single VCF-formated file containing the called and filtered genotypes for each distinct invididual in the samples file. Each variant is annotated with the following extra infornation:
 
-- ID field - dbSNP rs number
-- INFO/CAF -- 1000 genomes project allele frequency (from dbSNP annotation file)
-- INFO/TOPMED -- TOPMED project allele frequency (from dbSNP annotation file)
-- INFO/AA -- Inferred ancenstral allele from EPO/PECAN alignments (see below for information about how this is obtained)
+- **ID field:** dbSNP rs number
+- **INFO/CAF:** 1000 genomes project allele frequency (from dbSNP annotation file)
+- **INFO/TOPMED:** TOPMED project allele frequency (from dbSNP annotation file)
+- **INFO/AA:** Inferred ancenstral allele from EPO/PECAN alignments (see below for information about how this is obtained)
 
 
