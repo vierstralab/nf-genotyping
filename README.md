@@ -15,61 +15,62 @@ Samples BAM files are merged by corresponding individual and then used for a ``b
 ## Input
 
 <details><summary>Sample file [--samples_file]</summary>
+<p></p>
 <p>
 A tab-delimited file containing information about each sample. The file must contain a header and the following columns (other columns are permitted and ignored):
-<ul>
-	<li><strong>library_id:</strong> Unique identifier for the each sample/dataset</li>
-	<li><strong>indiv:</strong> Individual identifier for each sample; many samples can refer to one individual</li>
-	<li><strong>bamfile:</strong> Absolute path the BAM-formated file</li>
+
+- library_id: Unique identifier for the each sample/dataset
+- indiv: Individual identifier for each sample; many samples can refer to one individual
+- bamfile: Absolute path the BAM-formated file
 </p>
 </details>
 
 <details><summary>Genome reference [--genome]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>dbSNP reference [--dbsnp_file]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>Ancestral genome [--genome_ancestral_fasta_file]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 
 
 ### Additonal Parameters:
 <details><summary>Chunk size [--chunksize 5000000]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>SNP quality [--min_SNPQ 10]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>Genotype quality [--min_GQ 50]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>Sequencing depth [--min_DP 12]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>Hardy-Weinberg equilbrium [--hwe_cutoff 0.01]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 <details><summary>Output directory [--outdir .]</summary>
-<p>
-</p>
+<p></p>
+<p></p>
 </details>
 
 
