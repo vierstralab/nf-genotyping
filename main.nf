@@ -1,10 +1,9 @@
 #!/usr/bin/env nextflow
 
-params.outdir='output'
-params.chromsizes_filepath='/net/seq/data/genomes/human/GRCh38/noalts/GRCh38_no_alts.chrom_sizes'
-params.fasta_reference_filepath='/net/seq/data/genomes/human/GRCh38/noalts/GRCh38_no_alts.fa'
-params.dbsnp_filepath='/home/jvierstra/data/dbSNP/v151.hg38/All_20180418.fixed-chrom.vcf.gz'
-params.fasta_ancestral_filepath='/home/jvierstra/data/genomes/hg38/ancestral/homo_sapiens_ancestor_GRCh38/homo_sapiens_ancestor.fixed.fa'
+params.samples_file='/net/seq/data/projects/regulotyping-h.CD3+/metadata.txt'
+params.genome='/net/seq/data/genomes/human/GRCh38/noalts/GRCh38_no_alts'
+params.dbsnp_file='/home/jvierstra/data/dbSNP/v151.hg38/All_20180418.fixed-chrom.vcf.gz'
+params.genome_ancestral_fasta_file='/home/jvierstra/data/genomes/hg38/ancestral/homo_sapiens_ancestor_GRCh38/homo_sapiens_ancestor.fixed.fa'
 
 //genotyping caller parameters
 params.chunksize=5000000 //
@@ -13,15 +12,21 @@ params.min_GQ=50 // Minimum genotype quality
 params.min_DP=12 // Minimum read depth over SNP
 params.hwe_cutoff=0.01 // Remove variants that are out of Hardy-Weinberg equilibrium
 
+params.outdir='output'
+
+//DO NOT EDIT BELOW
+
+genome_fasta_file="$params.genome"  + ".fa"
+genome_chrom_sizes_file="$params.genome"  + ".chrom_sizes"
 
 // Read samples file
 Channel
-	.fromPath("/net/seq/data/projects/regulotyping-h.CD3+/metadata.txt")
+	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.donor_id, row.ag_number, row.bamfile ) }
+	.map{ row -> tuple( row.indiv, row.library_id, row.bamfile ) }
 	.set{ SAMPLES_AGGREGATIONS }
 
-// Returns a tuple with donor id and BAM files to merge (string)
+// Returns a tuple with indiv id and BAM files to merge (string)
 // Cannnot use files here because basenames are the same 
 SAMPLES_AGGREGATIONS
 	.groupTuple(by:0)
@@ -30,46 +35,46 @@ SAMPLES_AGGREGATIONS
 
 // Merge BAM files by inidividual
 process merge_bamfiles {
-	tag "${donor_id}"
+	tag "${indiv_id}"
 
 	cpus 2
 
 	input:
-	set val(donor_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
+	set val(indiv_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
 
 	output:
-	set val(donor_id), file("${donor_id}.bam"), file("${donor_id}.bam.bai") into DONORS_MERGED
+	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIVS_MERGED
 
 	script:
 	"""
-	samtools merge -f -@${task.cpus} ${donor_id}.bam ${bam_files}
-	samtools index ${donor_id}.bam
+	samtools merge -f -@${task.cpus} ${indiv_id}.bam ${bam_files}
+	samtools index ${indiv_id}.bam
 	"""
 }
 
-DONORS_MERGED.into{ DONORS_MERGED_FILES; DONORS_MERGED_LIST }
+INDIVS_MERGED.into{ INDIVS_MERGED_FILES; INDIVS_MERGED_LIST }
 
 // Create sample map file which is used by bcftools to specific input BAM files
-DONORS_MERGED_LIST
+INDIVS_MERGED_LIST
 	.map{ [it[0], file(it[1]).name].join("\t") }
 	.collectFile(
 		name: 'sample_map.tsv',
 		newLine: true
 	)
 	.first()
-	.set{ DONORS_MERGED_SAMPLE_MAP_FILE }
+	.set{ INDIVS_MERGED_SAMPLE_MAP_FILE }
 
 // Channel containing all files needed by bcftools to call genotypes (both VCF and its corresponding index)
-DONORS_MERGED_FILES
+INDIVS_MERGED_FILES
 	.flatMap{ [file(it[1]), file(it[2])] }
-	.set{ DONORS_MERGED_ALL_FILES }
+	.set{ INDIVS_MERGED_ALL_FILES }
 
 // Chunk genome up
 process create_genome_chunks {
 	executor 'local'
 
 	input:
-	file chromsizes from file(params.chromsizes_filepath)
+	file chrom_sizes from file(genome_chrom_sizes_file)
 	val chunksize from params.chunksize
 
 	output:
@@ -77,7 +82,7 @@ process create_genome_chunks {
 
 	script:
 	"""
-	cat ${chromsizes} \
+	cat ${chrom_sizes} \
   	| awk -v step=${chunksize} -v OFS="\t" \
 		'{ \
 			for(i=step; i<=\$2; i+=step) { \
@@ -100,10 +105,10 @@ process call_genotypes {
 	cpus 2
 
 	input:
-	file fasta_reference from file(params.fasta_reference_filepath)
+	file genone_fasta from file(genome_fasta_file)
 	
-	file dbsnp_file from file(params.dbsnp_filepath)
-	file dbsnp_index_file from file("${params.dbsnp_filepath}.tbi")
+	file dbsnp_file from file(params.dbsnp_file)
+	file dbsnp_index_file from file("${params.dbsnp_file}.tbi")
  	
 	val min_DP from params.min_DP
 	val min_SNPQ from params.min_SNPQ
@@ -111,8 +116,8 @@ process call_genotypes {
 	val hwe_cutoff from params.hwe_cutoff
 
 	val region from GENOME_CHUNKS_MAP
-	file '*' from DONORS_MERGED_ALL_FILES.collect()
-	file 'sample_map.tsv' from DONORS_MERGED_SAMPLE_MAP_FILE 
+	file '*' from INDIVS_MERGED_ALL_FILES.collect()
+	file 'sample_map.tsv' from INDIVS_MERGED_SAMPLE_MAP_FILE 
 
 	output:
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
@@ -124,7 +129,7 @@ process call_genotypes {
 
 	bcftools mpileup \
 		--regions ${region} \
-		--fasta-ref ${fasta_reference} \
+		--fasta-ref ${genome_fasta} \
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
@@ -152,7 +157,7 @@ process call_genotypes {
 		--threads ${task.cpus} \
 		--check-ref w \
 		-m - \
-		--fasta-ref ${fasta_reference} \
+		--fasta-ref ${genome_fasta} \
 	| bcftools filter \
 		-i"QUAL>=${min_SNPQ} & FORMAT/GQ>=${min_GQ} & FORMAT/DP>=${min_DP}" \
 		--SnpGap 3 --IndelGap 10 --set-GTs . \
@@ -185,7 +190,7 @@ process merge_vcfs {
 
 	input:
 	file '*' from GENOME_CHUNKS_VCF.collect()
-	file fasta_ancestral from file(params.fasta_ancestral_filepath)
+	file genome_fasta_ancestral from file(params.genome_ancestral_fasta_file)
 
 	output:
 	file 'all.filtered.vcf.gz*'
@@ -193,7 +198,6 @@ process merge_vcfs {
 
 	script:
 	"""
-
 	# Concatenate files
 	ls *.filtered.annotated.vcf.gz > files.txt
 	cat files.txt | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
@@ -219,7 +223,7 @@ process merge_vcfs {
 	echo "##INFO=<ID=AA,Number=1,Type=String,Description=\"Inferred ancestral allele -- EPO/PECAN alignments\">" > header.txt
 
 	# Contigs with ancestral allele information
-	faidx -i chromsizes ${fasta_ancestral} | cut -f1 > chroms.txt
+	faidx -i chromsizes ${genome_fasta_ancestral} | cut -f1 > chroms.txt
 	
 	# Get SNPs in BED-format; remove contigs with no FASTA sequence
 	bcftools query  -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" all.filtered.snps.vcf.gz \
@@ -229,7 +233,7 @@ process merge_vcfs {
 	# Get ancestral allele from FASTA file and make a TABIX file
 	faidx -i transposed \
 		-b all.filtered.snps.bed \
-		${fasta_ancestral} \
+		${genome_fasta_ancestral} \
 	| paste - all.filtered.snps.bed	\
 	| awk -v OFS="\t" '{ print \$5, \$7, \$4; }' \
 	| bgzip -c > all.filtered.snps.ancestral.tab.gz
@@ -250,38 +254,3 @@ process merge_vcfs {
 	"""
 }
 
-process generate_h5_tables {
-
-	scratch true
-	publishDir params.outdir + '/h5', mode: 'copy'
-
-	input:
-		set file(vcf_file), file(vcf_index_file) from FILTERED_SNPS_VCF
-		file chromsizes from file(params.chromsizes_filepath)
-
-	output:
-		file '*.h5'
-
-	script:
-	"""
-	
-	mkdir by_chrom
-
-	chroms=("\$(tabix -l ${vcf_file})")
-	for chrom in \${chroms[@]}; do
-		bcftools view -r \${chrom} -Oz ${vcf_file} > by_chrom/\${chrom}.vcf.gz
-		bcftools index by_chrom/\${chrom}.vcf.gz
-	done
-
-	gzip -c ${chromsizes} > chromsizes.txt.gz
-
-	snp2h5 --chrom chromsizes.txt.gz \
-		--format vcf \
-		--haplotype haplotypes.h5 \
-		--snp_index snp_index.h5 \
-		--snp_tab snp_tab.h5 \
-		by_chrom/*.vcf.gz
-
-	"""
-
-}
