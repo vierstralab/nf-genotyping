@@ -4,14 +4,13 @@ Nextflow pipeline for genotyping from epigenomics data
 
 ## Reqiurements
 - Nextflow (https://www.nextflow.io/)
-- samtools (version X.X) (http://www.htslib.org/)
-- bcftools (version 1.9) (http://www.htslib.org/)
-- htslib (version 1.9) (http://www.htslib.org/)
-- BEDOPS (version 2.4.35) ((http://www.htslib.org/))
-- WASP (https://github.com/bmvdgeijn/WASP)
+- samtools (http://www.htslib.org/)
+- bcftools (http://www.htslib.org/)
+- pyfaidx (https://github.com/mdshw5/pyfaidx)
 
 ## Pipeline overview
 
+Samples BAM files are merged by corresponding individual and then used for a ``bcftools``-based genotyping pipeline.
 
 ## Input
 
@@ -64,6 +63,19 @@ Nextflow pipeline for genotyping from epigenomics data
 </p>
 </details>
 
+<details><summary>Output directory [--outdir .]</summary>
+<p>
+</p>
+</details>
+
+
 ## Output
+
+The pipeline outputs a single VCF-formated file containing the called and filtered genotypes for each distinct invididual in the samples file. Each variant is annotated with the following extra infornation:
+
+- ID field - dbSNP rs number
+- INFO/CAF -- 1000 genomes project allele frequency (from dbSNP annotation file)
+- INFO/TOPMED -- TOPMED project allele frequency (from dbSNP annotation file)
+- INFO/AA -- Inferred ancenstral allele from EPO/PECAN alignments (see below for information about how this is obtained)
 
 
