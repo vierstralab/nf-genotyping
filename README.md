@@ -2,7 +2,7 @@
 
 Nextflow pipeline for genotyping from epigenomics data
 
-## Reqiurements
+## Requirements
 - Nextflow (https://www.nextflow.io/)
 - samtools (http://www.htslib.org/)
 - bcftools (http://www.htslib.org/)
@@ -11,6 +11,12 @@ Nextflow pipeline for genotyping from epigenomics data
 ## Pipeline overview
 
 Samples BAM files are merged by corresponding individual and then used for a ``bcftools``-based genotyping pipeline.
+
+## Usage
+```
+	$ nextflow run main.nf -config nextflow.config -profile Altius
+
+```
 
 ## Input
 
