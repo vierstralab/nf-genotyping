@@ -34,6 +34,8 @@ process merge_bamfiles {
 
 	cpus 2
 
+	publishDir params.outdir + '/merged', mode: 'symlink'
+
 	input:
 	set val(indiv_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
 
@@ -52,7 +54,7 @@ process merge_bamfiles {
 INDIVS_MERGED_LIST
 	.map{ [it[0], file(it[1]).name].join("\t") }
 	.collectFile(
-		name: 'sample_map.tsv',
+		name: 'sample_indiv_map.tsv',
 		newLine: true
 	)
 	.first()
@@ -111,15 +113,15 @@ process call_genotypes {
 
 	val region from GENOME_CHUNKS_MAP
 	file '*' from INDIVS_MERGED_ALL_FILES.collect()
-	file 'sample_map.tsv' from INDIVS_MERGED_SAMPLE_MAP_FILE 
+	file 'sample_indiv_map.tsv' from INDIVS_MERGED_SAMPLE_MAP_FILE 
 
 	output:
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
 
 	script:
 	"""
-	cut -f1 sample_map.tsv > samples.txt
-	cut -f2 sample_map.tsv > filelist.txt
+	cut -f1 sample_indiv_map.tsv > samples.txt
+	cut -f2 sample_indiv_map.tsv > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
@@ -180,7 +182,7 @@ process call_genotypes {
 process merge_vcfs {
 
 	scratch true
-	publishDir params.outdir + '/calls', mode: 'copy'
+	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:
 	file '*' from GENOME_CHUNKS_VCF.collect()
