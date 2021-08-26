@@ -23,7 +23,7 @@ genome_chrom_sizes_file="$params.genome"  + ".chrom_sizes"
 Channel
 	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.donor_id, row.ln_number, row.bamfile ) }
+	.map{ row -> tuple( row.indiv_id, row.ln_number, row.bam_file ) }
 	.groupTuple(by:0)
 	.map{ it -> tuple(it[0], it[2].join(" ")) }
 	.set{ SAMPLES_AGGREGATIONS_MERGE }
@@ -40,7 +40,7 @@ process merge_bamfiles {
 	set val(indiv_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
 
 	output:
-	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIVS_MERGED_FILES, INDIVS_MERGED_LIST
+	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIV_MERGED_FILES, INDIV_MERGED_LIST
 
 	script:
 	"""
@@ -51,19 +51,19 @@ process merge_bamfiles {
 
 
 // Create sample map file which is used by bcftools to specific input BAM files
-INDIVS_MERGED_LIST
+INDIV_MERGED_LIST
 	.map{ [it[0], file(it[1]).name].join("\t") }
 	.collectFile(
 		name: 'sample_indiv_map.tsv',
 		newLine: true
 	)
 	.first()
-	.set{ INDIVS_MERGED_SAMPLE_MAP_FILE }
+	.set{ INDIV_MERGED_SAMPLE_MAP_FILE }
 
 // Channel containing all files needed by bcftools to call genotypes (both VCF and its corresponding index)
-INDIVS_MERGED_FILES
+INDIV_MERGED_FILES
 	.flatMap{ [file(it[1]), file(it[2])] }
-	.set{ INDIVS_MERGED_ALL_FILES }
+	.set{ INDIV_MERGED_ALL_FILES }
 
 // Chunk genome up
 process create_genome_chunks {
@@ -112,8 +112,8 @@ process call_genotypes {
 	val hwe_cutoff from params.hwe_cutoff
 
 	val region from GENOME_CHUNKS_MAP
-	file '*' from INDIVS_MERGED_ALL_FILES.collect()
-	file 'sample_indiv_map.tsv' from INDIVS_MERGED_SAMPLE_MAP_FILE 
+	file '*' from INDIV_MERGED_ALL_FILES.collect()
+	file 'sample_indiv_map.tsv' from INDIV_MERGED_SAMPLE_MAP_FILE 
 
 	output:
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
