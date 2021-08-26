@@ -24,11 +24,6 @@ Channel
 	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
 	.map{ row -> tuple( row.indiv, row.library_id, row.bamfile ) }
-	.set{ SAMPLES_AGGREGATIONS }
-
-// Returns a tuple with indiv id and BAM files to merge (string)
-// Cannnot use files here because basenames are the same 
-SAMPLES_AGGREGATIONS
 	.groupTuple(by:0)
 	.map{ it -> tuple(it[0], it[2].join(" ")) }
 	.set{ SAMPLES_AGGREGATIONS_MERGE }
@@ -43,7 +38,7 @@ process merge_bamfiles {
 	set val(indiv_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
 
 	output:
-	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIVS_MERGED
+	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIVS_MERGED_FILES, INDIVS_MERGED_LIST
 
 	script:
 	"""
@@ -52,7 +47,6 @@ process merge_bamfiles {
 	"""
 }
 
-INDIVS_MERGED.into{ INDIVS_MERGED_FILES; INDIVS_MERGED_LIST }
 
 // Create sample map file which is used by bcftools to specific input BAM files
 INDIVS_MERGED_LIST
