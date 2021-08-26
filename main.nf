@@ -23,7 +23,7 @@ genome_chrom_sizes_file="$params.genome"  + ".chrom_sizes"
 Channel
 	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.indiv, row.library_id, row.bamfile ) }
+	.map{ row -> tuple( row.donor_id, row.ln_number, row.bamfile ) }
 	.groupTuple(by:0)
 	.map{ it -> tuple(it[0], it[2].join(" ")) }
 	.set{ SAMPLES_AGGREGATIONS_MERGE }
