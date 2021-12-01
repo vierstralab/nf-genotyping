@@ -16,8 +16,8 @@ params.outdir='output'
 
 //DO NOT EDIT BELOW
 
-genome_fasta_file="$params.genome"  + ".fa"
-genome_chrom_sizes_file="$params.genome"  + ".chrom_sizes"
+genome_fasta_file="${params.genome}"  + ".fa"
+genome_chrom_sizes_file="${params.genome}"  + ".chrom_sizes"
 
 // Read samples file
 Channel
@@ -95,13 +95,13 @@ GENOME_CHUNKS
 
 // Call genotypes per region
 process call_genotypes {
-	tag "region: ${region}"
+	tag "Region: ${region}"
 	
 	scratch true
 	cpus 2
 
 	input:
-	file genone_fasta from file(genome_fasta_file)
+	file genome_fasta from file(genome_fasta_file)
 	
 	file dbsnp_file from file(params.dbsnp_file)
 	file dbsnp_index_file from file("${params.dbsnp_file}.tbi")
@@ -191,7 +191,8 @@ process merge_vcfs {
 	output:
 	file 'all.filtered.vcf.gz*'
 	set file('all.filtered.snps.annotated.vcf.gz'), file('all.filtered.snps.annotated.vcf.gz.csi') into FILTERED_SNPS_VCF
-
+    file "plink.*"
+    
 	script:
 	"""
 	# Concatenate files
@@ -246,6 +247,15 @@ process merge_vcfs {
 	> all.filtered.snps.annotated.vcf.gz
 	
 	bcftools index all.filtered.snps.annotated.vcf.gz
+    
+    
+    plink2 --make-bed \
+    	--output-chr chrM \
+    	--vcf all.filtered.snps.annotated.vcf.gz \
+        --keep-allele-order \
+    	--snps-only \
+        -allow-extra-chr \
+    	--out plink
 
 	"""
 }
