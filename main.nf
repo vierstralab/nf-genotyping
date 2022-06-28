@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+nextflow.enable.dsl = 1
 
 params.samples_file='/net/seq/data/projects/regulotyping-h.CD3+/metadata.txt'
 params.genome='/net/seq/data/genomes/human/GRCh38/noalts/GRCh38_no_alts'
