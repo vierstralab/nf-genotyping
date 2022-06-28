@@ -41,12 +41,12 @@ process filter_variants {
 	bcftools query \
 		-s ${indiv_id} \
 		-i'GT="alt"' \
-		-f'%CHROM\\t%POS0\\t%POS\\t%CHROM:%POS:%REF:%ALT\\t%REF\\t%ALT\\t[%GT\\t%GQ\\t%DP\\t%AD{0}\\t%AD{1}]\\n' \
+		-f'%CHROM\\t%POS0\\t%POS\\t%ID\\t%REF\\t%ALT\\t%INFO/MAF\\t[%GT\\t%GQ\\t%DP\\t%AD{0}\\t%AD{1}]\\n' \
 		${genotype_file} \
 	| awk -v OFS="\\t" \
 		-v min_GQ=${min_GQ} -v min_AD=${min_AD} -v min_DP=${min_DP}\
-		'\$8<min_GQ { next; } \$9<min_DP { next; }\
-			(\$7=="0/1" || \$7=="1/0" || \$7=="0|1" || \$7=="1|0") && (\$10<min_AD || \$11<min_AD) { \
+		'\$9<min_GQ { next; } \$10<min_DP { next; }\
+			(\$8=="0/1" || \$8=="1/0" || \$8=="0|1" || \$8=="1|0") && (\$11<min_AD || \$12<min_AD) { \
 				next; \
 			} \
 			{ print; }' \
