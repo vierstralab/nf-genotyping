@@ -202,7 +202,7 @@ process merge_vcfs {
 	echo '##INFO=<ID=AA,Number=1,Type=String,Description="Inferred ancestral allele -- EPO/PECAN alignments">' > header.txt
 
 	# Contigs with ancestral allele information
-	faidx -i chromsizes ${genome_fasta_ancestral} | cut -f1 > chroms.txt
+	samtools faidx -i chromsizes ${genome_fasta_ancestral} | cut -f1 > chroms.txt
 	
 	# Get SNPs in BED-format; remove contigs with no FASTA sequence
 	bcftools query  -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" all.filtered.snps.vcf.gz \
@@ -210,7 +210,7 @@ process merge_vcfs {
 	> all.filtered.snps.bed
 
 	# Get ancestral allele from FASTA file and make a TABIX file
-	faidx -i transposed \
+	samtools faidx -i transposed \
 		-b all.filtered.snps.bed \
 		${genome_fasta_ancestral} \
 	| paste - all.filtered.snps.bed	\
