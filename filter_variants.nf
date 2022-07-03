@@ -3,12 +3,6 @@ nextflow.enable.dsl = 1
 
 params.samples_file=''
 params.genotype_file=''
-params.outdir='output'
-
-//heterzygous filtering parameters
-params.min_GQ=50 // Minimum genotype quality
-params.min_DP=12 // Minimum read depth over SNP
-params.min_AD=4 // Minimum reads per alleles
 
 // Read samples file
 Channel
@@ -19,7 +13,6 @@ Channel
 
 process filter_variants {
 	tag "${indiv_id}:${cell_type}"
-	module ' bedops/2.4.40-typical'
 
 	publishDir params.outdir, mode: 'symlink'
 

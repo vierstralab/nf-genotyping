@@ -1,22 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 1
 
-params.samples_file='/net/seq/data/projects/regulotyping-h.CD3+/metadata.txt'
-params.genome='/net/seq/data/genomes/human/GRCh38/noalts/GRCh38_no_alts'
-params.dbsnp_file='/home/jvierstra/data/dbSNP/v151.hg38/All_20180418.fixed-chrom.vcf.gz'
-params.genome_ancestral_fasta_file='/home/jvierstra/data/genomes/hg38/ancestral/homo_sapiens_ancestor_GRCh38/homo_sapiens_ancestor.fixed.fa'
-
-//genotyping caller parameters
-params.chunksize=5000000 //
-params.min_SNPQ=10 // Minimum SNP quality
-params.min_GQ=50 // Minimum genotype quality
-params.min_DP=12 // Minimum read depth over SNP
-params.hwe_cutoff=0.01 // Remove variants that are out of Hardy-Weinberg equilibrium
-
-params.outdir='output'
-
-//DO NOT EDIT BELOW
-
 genome_fasta_file="${params.genome}"  + ".fa"
 genome_chrom_sizes_file="${params.genome}"  + ".chrom_sizes"
 
@@ -190,10 +174,7 @@ process merge_vcfs {
 	file genome_fasta_ancestral from file(params.genome_ancestral_fasta_file)
 
 	output:
-	file 'all.filtered.vcf.gz*'
 	set file('all.filtered.snps.annotated.vcf.gz'), file('all.filtered.snps.annotated.vcf.gz.csi') into FILTERED_SNPS_VCF
-    file "plink.*"
-    
 	script:
 	"""
 	# Concatenate files
@@ -218,7 +199,7 @@ process merge_vcfs {
 
 	# Annotate ancestral allele
 	
-	echo "##INFO=<ID=AA,Number=1,Type=String,Description=\"Inferred ancestral allele -- EPO/PECAN alignments\">" > header.txt
+	echo '##INFO=<ID=AA,Number=1,Type=String,Description="Inferred ancestral allele -- EPO/PECAN alignments">' > header.txt
 
 	# Contigs with ancestral allele information
 	faidx -i chromsizes ${genome_fasta_ancestral} | cut -f1 > chroms.txt
@@ -248,16 +229,6 @@ process merge_vcfs {
 	> all.filtered.snps.annotated.vcf.gz
 	
 	bcftools index all.filtered.snps.annotated.vcf.gz
-    
-    
-    plink2 --make-bed \
-    	--output-chr chrM \
-    	--vcf all.filtered.snps.annotated.vcf.gz \
-        --keep-allele-order \
-    	--snps-only \
-        -allow-extra-chr \
-    	--out plink
-
 	"""
 }
 
