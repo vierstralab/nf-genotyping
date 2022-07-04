@@ -8,16 +8,16 @@ params.genotype_file=''
 Channel
 	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.indiv_id, row.cell_type, row.hotspots_file, row.filtered_sites_file ) }
+	.map{ row -> tuple( row.indiv_id, row.hotspots_file, row.filtered_sites_file ) }
 	.set{ INDIV_CELL_TYPE }
 
 process filter_variants {
-	tag "${indiv_id}:${cell_type}"
+	tag "${outname}"
 
 	publishDir "${params.outdir}/bed_files", mode: 'symlink'
 
 	input:
-	tuple val(indiv_id), val(cell_type), val(hotspots_file), val(outname) from INDIV_CELL_TYPE
+	tuple val(indiv_id), val(hotspots_file), val(outname) from INDIV_CELL_TYPE
 	
 	file genotype_file from file(params.genotype_file)
 	file '*' from file("${params.genotype_file}.csi")
