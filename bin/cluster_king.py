@@ -1,4 +1,5 @@
 import argparse
+from curses import meta
 import os
 import numpy as np
 import pandas as pd
@@ -35,7 +36,8 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
     metadata = pd.read_table(meta_path, header=0, dtype={'indiv_id': str})
     #metadata = metadata.rename(columns={'indiv_id': 'ds_number'})
     metadata = metadata.merge(clusters, on='indiv_id').sort_values(by='genotype_cluster')
-    metadata = metadata.rename(columns={'genotype_cluster': 'indiv_id'})
+    metadata.rename(columns={'indiv_id': 'old_indiv_id'}, inplace=True)
+    metadata.rename(columns={'genotype_cluster': 'indiv_id'}, inplace=True)
     print(metadata)
     metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(4)
     metadata.to_csv(new_meta_path, header=True, index=False, sep='\t')
