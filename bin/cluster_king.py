@@ -21,8 +21,12 @@ def visualize_clustering(mat, linkage, out_path):
     plt.close(fig)
 
 
+def get_filtered_sites_path(row):
+    row['filtered_sites_file'] = f"{row['indiv_id']}_{row['cell_type']}.bed.gz" 
+    return row
+
 def main(input_matrix, input_matrix_ids, meta_path, outpath):
-    new_meta_path = os.path.join(outpath, "metadata.merged.tsv") 
+    new_meta_path = os.path.join(outpath, "metadata.clustered.tsv") 
     indivs = np.loadtxt(input_matrix_ids, skiprows=0, dtype=str)
     rel_mat = np.loadtxt(input_matrix)
     mat = pd.DataFrame(rel_mat, index=indivs, columns=indivs)
@@ -39,6 +43,7 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
     metadata.rename(columns={'indiv_id': 'old_indiv_id'}, inplace=True)
     metadata.rename(columns={'genotype_cluster': 'indiv_id'}, inplace=True)
     metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(4)
+    metadata = metadata.apply(get_filtered_sites_path, axis=1)
     metadata.to_csv(new_meta_path, header=True, index=False, sep='\t')
     visualizations_path = os.path.join(outpath, 'clustering')
     visualize_clustering(mat, linkage, out_path=visualizations_path)
@@ -55,7 +60,8 @@ if __name__ == '__main__':
 						help="Path to meta file")
 
     parser.add_argument("--outpath", type=str, 
-						help="Output path to directory with meta file and")
+						help="Path to directory to save updated metafile and visualizations")
+    
 
     args = parser.parse_args()
 
