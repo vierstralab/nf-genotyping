@@ -17,7 +17,7 @@ def visualize_clustering(mat, linkage, out_path):
         g.spines[l].set_visible(True)
         g.spines[l].set_color('k')
     
-    plt.save(f"{out_path}.plot.png")
+    fig.save(f"{out_path}.plot.png")
     fig.close()
 
 
@@ -38,7 +38,6 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
     metadata = metadata.merge(clusters, on='indiv_id').sort_values(by='genotype_cluster')
     metadata.rename(columns={'indiv_id': 'old_indiv_id'}, inplace=True)
     metadata.rename(columns={'genotype_cluster': 'indiv_id'}, inplace=True)
-    print(metadata)
     metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(4)
     metadata.to_csv(new_meta_path, header=True, index=False, sep='\t')
     visualizations_path = os.path.join(outpath, 'clustering.png')
