@@ -45,7 +45,7 @@ process filter_variants {
 	| sort-bed - \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${indiv_id}_${cell_type}.bed.gz
-
+	echo ${indiv_id}_${cell_type}.bed.gz
 	tabix -p bed ${indiv_id}_${cell_type}.bed.gz
 	"""
 }
