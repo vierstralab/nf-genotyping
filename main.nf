@@ -87,15 +87,8 @@ process call_genotypes {
 
 	input:
 	file genome_fasta from file(genome_fasta_file)
-	
 	file dbsnp_file from file(params.dbsnp_file)
 	file dbsnp_index_file from file("${params.dbsnp_file}.tbi")
- 	
-	val min_DP from params.min_DP
-	val min_SNPQ from params.min_SNPQ
-	val min_GQ from params.min_GQ
-	val hwe_cutoff from params.hwe_cutoff
-
 	val region from GENOME_CHUNKS_MAP
 	file '*' from INDIV_MERGED_ALL_FILES.collect()
 	file 'sample_indiv_map.tsv' from INDIV_MERGED_SAMPLE_MAP_FILE 
@@ -125,7 +118,7 @@ process call_genotypes {
 		--format-fields GQ \
 		--output-type v \
 	| bcftools filter \
-		-i"INFO/DP>=${min_DP}" \
+		-i"INFO/DP>=${params.min_DP}" \
 		--output-type z - \
 	> ${region}.vcf.gz
 
@@ -140,13 +133,13 @@ process call_genotypes {
 		-m - \
 		--fasta-ref ${genome_fasta} \
 	| bcftools filter \
-		-i"QUAL>=${min_SNPQ} & FORMAT/GQ>=${min_GQ} & FORMAT/DP>=${min_DP}" \
+		-i"QUAL>=${params.min_SNPQ} & FORMAT/GQ>=${params.min_GQ} & FORMAT/DP>=${params.min_DP}" \
 		--SnpGap 3 --IndelGap 10 --set-GTs . \
 	| bcftools view \
 		-i'GT="alt"' --trim-alt-alleles \
 	| bcftools annotate -x ^INFO/DP \
 	| bcftools +fill-tags -- -t all \
-	| bcftools filter --output-type z -e"INFO/HWE<${hwe_cutoff}" \
+	| bcftools filter --output-type z -e"INFO/HWE<${params.hwe_cutoff}" \
 	> ${region}.filtered.vcf.gz
 
 	bcftools index ${region}.filtered.vcf.gz
