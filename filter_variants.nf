@@ -18,13 +18,8 @@ process filter_variants {
 
 	input:
 	set val(indiv_id), val(cell_type), val(hotspots_file) from INDIV_CELL_TYPE
-	
 	file genotype_file from file(params.genotype_file)
 	file '*' from file("${params.genotype_file}.csi")
-	
-	val min_DP from params.min_DP
-	val min_AD from params.min_AD
-	val min_GQ from params.min_GQ
 
 	output:
 	file("${indiv_id}_${cell_type}.bed.gz")
@@ -32,13 +27,16 @@ process filter_variants {
 
 	script:
 	"""
+	# TODO
+	#add | bedops -e 1 - ${hotspots_file} 
+
 	bcftools query \
 		-s ${indiv_id} \
 		-i'GT="alt"' \
 		-f'%CHROM\\t%POS0\\t%POS\\t%ID\\t%REF\\t%ALT\\t%INFO/MAF\\t[%GT\\t%GQ\\t%DP\\t%AD{0}\\t%AD{1}]\\n' \
 		${genotype_file} \
 	| awk -v OFS="\\t" \
-		-v min_GQ=${min_GQ} -v min_AD=${min_AD} -v min_DP=${min_DP}\
+		-v min_GQ=${params.min_GQ} -v min_AD=${params.min_AD} -v min_DP=${params.min_DP}\
 		'\$9<min_GQ { next; } \$10<min_DP { next; }\
 			(\$8=="0/1" || \$8=="1/0" || \$8=="0|1" || \$8=="1|0") && (\$11<min_AD || \$12<min_AD) { \
 				next; \
@@ -46,7 +44,6 @@ process filter_variants {
 			{ print; }' \
 	| sort-bed - \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
-	#tmp workaround | bedops -e 1 - ${hotspots_file} \
 	| bgzip -c > ${indiv_id}_${cell_type}.bed.gz
 
 	tabix -p bed ${indiv_id}_${cell_type}.bed.gz
