@@ -8,9 +8,9 @@ genome_chrom_sizes_file="${params.genome}"  + ".chrom_sizes"
 Channel
 	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.indiv_id, row.ln_number, row.bam_file ) }
-	.groupTuple(by:0)
-	.map{ it -> tuple(it[0], it[2].join(" ")) }
+	.map(row -> tuple( row.indiv_id, row.ln_number, row.bamfile ))
+	.groupTuple()
+	.map(it -> tuple(it[0], it[2].join(" ")))
 	.set{ SAMPLES_AGGREGATIONS_MERGE }
 
 // Merge BAM files by inidividual
@@ -233,7 +233,7 @@ process merge_vcfs {
 }
 
 process clusterIndivs {
-	
+
     publishDir "${outdir}/clustering"
 
     input:
