@@ -8,7 +8,7 @@ process clusterIndivs {
     input:
         tuple path(vcf_file), path(index_file)
     output:
-        path "./*"
+        tuple path('metadata.merged.tsv'), path('clustering.png')
     script:
     """
     plink2 --allow-extra-chr \
