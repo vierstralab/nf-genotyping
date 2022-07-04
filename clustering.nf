@@ -1,9 +1,12 @@
+#!/usr/bin/env nextflow
+params.genotype_file=''
+
 process clusterIndivs {
 
     publishDir "${params.outdir}/clustering"
 
     input:
-        tuple path(vcf_file), path("${vcf_file}.csi") from FILTERED_SNPS_VCF
+        tuple path(vcf_file), path(index_file)
     output:
         path "./*"
     script:
@@ -18,4 +21,10 @@ process clusterIndivs {
     --meta-file ${params.samples_file}
     --outpath ./
     """
+}
+
+workflow {
+    vcf_and_index = Channel.value([params.genotype_file, "${params.genotype_file}.csi"])
+    clusterIndivs(vcf_and_index)
+
 }
