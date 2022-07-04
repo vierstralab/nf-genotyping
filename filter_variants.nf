@@ -14,7 +14,7 @@ Channel
 process filter_variants {
 	tag "${indiv_id}:${cell_type}"
 
-	publishDir params.outdir, mode: 'symlink'
+	publishDir "${params.outdir}/bed_files", mode: 'symlink'
 
 	input:
 	tuple val(indiv_id), val(cell_type), val(hotspots_file) from INDIV_CELL_TYPE
