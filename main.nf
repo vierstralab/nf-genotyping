@@ -98,6 +98,11 @@ process call_genotypes {
 
 	script:
 	"""
+	# Workaround
+	export OMP_NUM_THREADS=1
+	export USE_SIMPLE_THREADED_LEVEL3= 1
+
+	
 	cut -f1 sample_indiv_map.tsv > samples.txt
 	cut -f2 sample_indiv_map.tsv > filelist.txt
 
