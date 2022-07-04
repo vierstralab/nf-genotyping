@@ -46,7 +46,7 @@ process filter_variants {
 			{ print; }' \
 	| sort-bed - \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
-	| bedops -e 1 - ${hotspots_file} \
+	#tmp workaround | bedops -e 1 - ${hotspots_file} \
 	| bgzip -c > ${indiv_id}_${cell_type}.bed.gz
 
 	tabix -p bed ${indiv_id}_${cell_type}.bed.gz
