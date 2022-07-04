@@ -33,8 +33,8 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
         by='genotype_cluster')
     
     metadata = pd.read_table(meta_path, header=0, dtype={'indiv_id': object})
-    metadata = metadata.rename(columns={'indiv_id': 'ds_number'})
-    metadata = metadata.merge(clusters, on='ds_number').sort_values(by='genotype_cluster')
+    #metadata = metadata.rename(columns={'indiv_id': 'ds_number'})
+    metadata = metadata.merge(clusters, on='indiv_id').sort_values(by='genotype_cluster')
     metadata = metadata.rename(columns={'genotype_cluster': 'indiv_id'})
     metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(4)
     metadata.to_csv(new_meta_path, header=True, index=False, sep='\t')
