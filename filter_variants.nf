@@ -17,16 +17,16 @@ process filter_variants {
 	publishDir params.outdir, mode: 'symlink'
 
 	input:
-	set val(indiv_id), val(cell_type), val(hotspots_file) from INDIV_CELL_TYPE
+	tuple val(indiv_id), val(cell_type), val(hotspots_file) from INDIV_CELL_TYPE
 	
 	file genotype_file from file(params.genotype_file)
 	file '*' from file("${params.genotype_file}.csi")
 
 	output:
-	file("${indiv_id}_${cell_type}.bed.gz")
-	file("${indiv_id}_${cell_type}.bed.gz.tbi")
+	tuple file(name), file("${name}.tbi")
 
 	script:
+	name = "${indiv_id}_${cell_type}.bed.gz"
 	"""
 	# TODO
 	#add | bedops -e 1 - ${hotspots_file} 
@@ -45,9 +45,9 @@ process filter_variants {
 			{ print; }' \
 	| sort-bed - \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
-	| bgzip -c > ${indiv_id}_${cell_type}.bed.gz
+	| bgzip -c > ${name}
 
-	tabix -p bed ${indiv_id}_${cell_type}.bed.gz
+	tabix -f -p bed ${name}
 	"""
 }
 
