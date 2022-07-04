@@ -32,10 +32,11 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
     clusters = pd.DataFrame({'indiv_id': mat.index, 'genotype_cluster': cl}).sort_values(
         by='genotype_cluster')
     
-    metadata = pd.read_table(meta_path, header=0, dtype={'indiv_id': object})
+    metadata = pd.read_table(meta_path, header=0, dtype={'indiv_id': str})
     #metadata = metadata.rename(columns={'indiv_id': 'ds_number'})
     metadata = metadata.merge(clusters, on='indiv_id').sort_values(by='genotype_cluster')
     metadata = metadata.rename(columns={'genotype_cluster': 'indiv_id'})
+    print(metadata)
     metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(4)
     metadata.to_csv(new_meta_path, header=True, index=False, sep='\t')
     visualizations_path = os.path.join(outpath, 'clustering.png')
