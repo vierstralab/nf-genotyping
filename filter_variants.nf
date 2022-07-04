@@ -43,8 +43,8 @@ process filter_variants {
 			} \
 			{ print; }' \
 	| sort-bed - \
-	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
-	| bgzip -c > ${indiv_id}_${cell_type}.bed.gz
+	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn > file.bed
+	bgzip -c file.bed > ${indiv_id}_${cell_type}.bed.gz
 	echo ${indiv_id}_${cell_type}.bed.gz
 	tabix -p bed ${indiv_id}_${cell_type}.bed.gz
 	"""
