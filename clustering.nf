@@ -18,7 +18,7 @@ process clusterIndivs {
 
     python3 $baseDir/bin/cluster_king.py --matrix snps.clustering.king \
     --matrix-ids snps.clustering.king.id \
-    --meta-file ${params.samples_file}
+    --meta-file ${params.samples_file} \
     --outpath ./
     """
 }
