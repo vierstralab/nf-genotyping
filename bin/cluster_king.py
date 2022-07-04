@@ -29,7 +29,7 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
     mat[np.isnan(mat)] = 0
     linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
     cl = hierarchy.fcluster(linkage, 0.1, criterion='distance')
-    clusters = pd.DataFrame({'ds_number': mat.index, 'genotype_cluster': cl}).sort_values(
+    clusters = pd.DataFrame({'indiv_id': mat.index, 'genotype_cluster': cl}).sort_values(
         by='genotype_cluster')
     
     metadata = pd.read_table(meta_path, header=0, dtype={'indiv_id': object})
