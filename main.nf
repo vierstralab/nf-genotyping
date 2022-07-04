@@ -138,7 +138,7 @@ process call_genotypes {
 	| bcftools view \
 		-i'GT="alt"' --trim-alt-alleles \
 	| bcftools annotate -x ^INFO/DP \
-	| bcftools +fill-tags -- -t all \
+	| bcftools +fill-tags \
 	| bcftools filter --output-type z -e"INFO/HWE<${params.hwe_cutoff}" \
 	> ${region}.filtered.vcf.gz
 
@@ -227,7 +227,7 @@ process merge_vcfs {
 
 process clusterIndivs {
 
-    publishDir "${outdir}/clustering"
+    publishDir "${params.outdir}/clustering"
 
     input:
         tuple path(vcf_file), path("${vcf_file}.csi") from FILTERED_SNPS_VCF
