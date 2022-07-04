@@ -17,7 +17,7 @@ def visualize_clustering(mat, linkage, out_path):
         g.spines[l].set_visible(True)
         g.spines[l].set_color('k')
     
-    fig.save(f"{out_path}.plot.png")
+    plt.savefig(f"{out_path}.plot.png")
     fig.close()
 
 
