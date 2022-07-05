@@ -27,9 +27,6 @@ process filter_variants {
 
 	script:
 	"""
-	# TODO
-	#add 
-
 	bcftools query \
 		-s ${indiv_id} \
 		-i'GT="alt"' \
