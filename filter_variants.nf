@@ -28,7 +28,7 @@ process filter_variants {
 	script:
 	"""
 	# TODO
-	#add | bedops -e 1 - ${hotspots_file} 
+	#add 
 
 	bcftools query \
 		-s ${indiv_id} \
@@ -44,6 +44,7 @@ process filter_variants {
 			{ print; }' \
 	| sort-bed - \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
+	| bedops -e 1 - ${hotspots_file} \
 	| bgzip -c > ${outname}
 
 	tabix -f -p bed ${outname}
