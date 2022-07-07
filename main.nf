@@ -33,7 +33,7 @@ process change_bam_name {
 	ext = getExtension(bam_file)
 	name = "${ag_id}.${ext}"
 	"""
-	ln -s ${bam_file} ${name}
+	ln -sf ${bam_file} ${name}
 	"""
 }
 
