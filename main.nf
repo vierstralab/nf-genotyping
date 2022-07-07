@@ -4,43 +4,16 @@ nextflow.enable.dsl = 1
 genome_fasta_file="${params.genome}"  + ".fa"
 genome_chrom_sizes_file="${params.genome}"  + ".chrom_sizes"
 
-def getExtension(name) {
-    if( !name ) return ''
-	int pos = name.lastIndexOf('.')
-	if( pos == -1 ) return ''
-	return name.substring(pos+1)
-}
 // Read samples file
 Channel
 	.fromPath(params.samples_file)
 	.splitCsv(header:true, sep:'\t')
-	.map(row -> tuple( row.indiv_id, row.ag_id, row.bam_file ))
-	.set{ SAMPLE_AGGREGATION }
-
-//Workaround to be able to merge files with same basenames
-process change_bam_name {
-	tag "${ag_id}"
-
-	executor 'local'
-
-	input: 
-		tuple val(indiv_id), val(ag_id), val(bam_file) from SAMPLE_AGGREGATION
-	
-	output:
-		tuple val(indiv_id), path(name) into SAMPLE_BAM_CORRESPONDENSE
-
-	script:
-	ext = getExtension(bam_file)
-	name = "${ag_id}.${ext}"
-	"""
-	ln -sf ${bam_file} ${name}
-	"""
-}
-
-SAMPLE_BAM_CORRESPONDENSE
+	.map(row -> tuple( row.indiv_id, row.bam_file ))
 	.groupTuple()
+	.map( it -> tuple(it[0], it[1].join(' ')))
 	.set{ SAMPLES_AGGREGATIONS_MERGE }
 // Merge BAM files by inidividual
+
 process merge_bamfiles {
 	tag "${indiv_id}"
 
@@ -49,14 +22,14 @@ process merge_bamfiles {
 	publishDir params.outdir + '/merged', mode: 'symlink'
 
 	input:
-	set val(indiv_id), path(bam_files) from SAMPLES_AGGREGATIONS_MERGE
+	set val(indiv_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
 
 	output:
 	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIV_MERGED_FILES, INDIV_MERGED_LIST
 
 	script:
 	"""
-	samtools merge -f -@${task.cpus} ${indiv_id}.bam ${bam_files}
+	samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
 	samtools index ${indiv_id}.bam
 	"""
 }
