@@ -22,7 +22,7 @@ def visualize_clustering(mat, linkage, out_path):
 
 
 def get_filtered_sites_path(row):
-    row['filtered_sites_file'] = f"{row['indiv_id']}_{row['cell_type']}.bed.gz" 
+    row['filtered_sites_file'] = f"{row['indiv_id']}_{row['cells']}.bed.gz" 
     return row
 
 def main(input_matrix, input_matrix_ids, meta_path, outpath):
