@@ -6,7 +6,7 @@ process clusterIndivs {
     publishDir "${params.outdir}/clustering"
 
     input:
-        tuple path(vcf_file), path(index_file)
+        tuple path(vcf_file)
     output:
         tuple path('metadata.clustered.tsv'), path('clustering.png')
     script:
@@ -24,7 +24,7 @@ process clusterIndivs {
 }
 
 workflow {
-    vcf_and_index = Channel.value([params.genotype_file, "${params.genotype_file}.csi"])
+    vcf_and_index = Channel.value(params.genotype_file)
     clusterIndivs(vcf_and_index)
 
 }
