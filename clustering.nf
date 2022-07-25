@@ -1,12 +1,11 @@
 #!/usr/bin/env nextflow
-params.genotype_file=''
 
 process clusterIndivs {
 
     publishDir "${params.outdir}/clustering"
 
     input:
-        tuple path(vcf_file)
+        path vcf_file
     output:
         tuple path('metadata.clustered.tsv'), path('clustering.png')
     script:
