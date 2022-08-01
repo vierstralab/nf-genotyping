@@ -64,7 +64,7 @@ process create_genome_chunks {
 	script:
 	"""
 	cat ${chrom_sizes} | \
-	 $/grep -i '^chr([1-9]|1[0-9]|2[0-2]|[XY])\s'/$ \
+	 grep -i '\^chr\([1-9]\|1[0-9]\|2[0-2]\|[XY]\)\s'/$ \
   	| awk -v step=${chunksize} -v OFS="\t" \
 		'{ \
 			for(i=step; i<=\$2; i+=step) { \
