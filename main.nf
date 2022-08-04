@@ -92,22 +92,21 @@ process call_genotypes {
 	file dbsnp_index_file from file("${params.dbsnp_file}.tbi")
 	val region from GENOME_CHUNKS_MAP
 	file '*' from INDIV_MERGED_ALL_FILES.collect()
-	file 'sample_indiv_map.tsv' from INDIV_MERGED_SAMPLE_MAP_FILE 
+	file indiv_map from INDIV_MERGED_SAMPLE_MAP_FILE 
 
 	output:
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
 
 	script:
+	m_depth = indiv_map.countLines() * 25
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
 
-	cut -f1 sample_indiv_map.tsv > samples.txt
-	cut -f2 sample_indiv_map.tsv > filelist.txt
-	n_samples=\$( cat samples.txt | wc -l )
-	echo \$n_samples * 2
+	cut -f1 ${indiv_map} > samples.txt
+	cut -f2 ${indiv_map} > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
@@ -115,7 +114,7 @@ process call_genotypes {
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth 10000 --max-idepth 200000 \
+		--max-depth ${m_depth} --max-idepth ${m_depth * 20} \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
