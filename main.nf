@@ -41,7 +41,9 @@ INDIV_MERGED_LIST
 	.collectFile(
 		name: 'sample_indiv_map.tsv',
 		newLine: true
-	)
+	).map{
+		it -> tuple(it, it.countLines())
+	}
 	.first()
 	.set{ INDIV_MERGED_SAMPLE_MAP_FILE }
 
@@ -92,13 +94,12 @@ process call_genotypes {
 	file dbsnp_index_file from file("${params.dbsnp_file}.tbi")
 	val region from GENOME_CHUNKS_MAP
 	file '*' from INDIV_MERGED_ALL_FILES.collect()
-	file indiv_map from INDIV_MERGED_SAMPLE_MAP_FILE 
+	tuple file(indiv_map), val(m_depth) from INDIV_MERGED_SAMPLE_MAP_FILE 
 
 	output:
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
 
 	script:
-	def m_depth = indiv_map.countLines()
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
