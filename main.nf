@@ -106,7 +106,7 @@ process call_genotypes {
 
 	cut -f1 sample_indiv_map.tsv > samples.txt
 	cut -f2 sample_indiv_map.tsv > filelist.txt
-	n_samples=$( cat samples.txt | wc -l )
+	n_samples=\$( cat samples.txt | wc -l )
 	echo \$n_samples * 2
 
 	bcftools mpileup \
