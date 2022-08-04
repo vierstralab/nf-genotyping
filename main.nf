@@ -98,7 +98,7 @@ process call_genotypes {
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
 
 	script:
-	m_depth = indiv_map.countLines() * 25
+	def m_depth = indiv_map.countLines() * 25
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
