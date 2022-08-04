@@ -98,13 +98,13 @@ process call_genotypes {
 	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
 
 	script:
-	def m_depth = indiv_map.countLines() * 25
+	def m_depth = indiv_map.countLines()
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-
+	echo $m_depth
 	cut -f1 ${indiv_map} > samples.txt
 	cut -f2 ${indiv_map} > filelist.txt
 
@@ -114,7 +114,7 @@ process call_genotypes {
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth ${m_depth} --max-idepth ${m_depth * 20} \
+		--max-depth ${m_depth * 25} --max-idepth ${m_depth * 500} \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
