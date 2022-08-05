@@ -206,16 +206,16 @@ workflow genotyping {
 		samples_aggregations
 	main:
 		merged_bamfiles = merge_bamfiles(samples_aggregations)
-
+		merged_bamfiles.take(5).view()
 		all_merged_files = merged_bamfiles.collect()
-		all_merged_files.view()
-		all_merged_files[0].view()
+		//all_merged_files.view()
+		//all_merged_files[0].view()
 
 		//genome_chunks = create_genome_chunks().flatMap( it.split() )
 		// region_genotypes = call_genotypes(genome_chunks, all_merged_files)
 		// merge_vcfs(region_genotypes.collect())
-	emit:
-		merge_vcfs.out
+	//emit:
+	//	merge_vcfs.out
 }
 
 
