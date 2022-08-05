@@ -62,7 +62,7 @@ process call_genotypes {
 
 	script:
 	indivs_file_content = indiv_ids.join('\n')
-	indiv_vcfs_content = indiv_vcfs.map(it -> it.name).join('\n')
+	indiv_vcfs_content = indiv_vcfs.map(f -> f.getName()).join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
@@ -206,7 +206,7 @@ workflow genotyping {
 		all_merged_files.view()
 		all_merged_files[0].view()
 
-		genome_chunks = create_genome_chunks().flatMap{ it.split() }
+		genome_chunks = create_genome_chunks().flatMap( it.split() )
 		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
 		merge_vcfs(region_genotypes.collect())
 	emit:
