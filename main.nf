@@ -211,7 +211,7 @@ workflow genotyping {
 		all_merged_files.view()
 		all_merged_files[0].view()
 
-		genome_chunks = create_genome_chunks().flatMap( it.split() )
+		//genome_chunks = create_genome_chunks().flatMap( it.split() )
 		// region_genotypes = call_genotypes(genome_chunks, all_merged_files)
 		// merge_vcfs(region_genotypes.collect())
 	emit:
