@@ -14,23 +14,14 @@ process merge_bamfiles {
 	publishDir params.outdir + '/merged', mode: 'symlink'
 
 	input:
-	tuple val(indiv_id), val(bam_files), val(bam_files_count)
+	tuple val(indiv_id), val(bam_files)
 
 	output:
 	tuple val(indiv_id), path("${indiv_id}.bam"), path("${indiv_id}.bam.bai")
 	script:
 	"""
-	if (( ${bam_files_count} > 1 )); then
-		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
-		samtools index ${indiv_id}.bam
-	else
-		ln -s ${bam_files} ${indiv_id}.bam
-		if [ -f {bam_files}.bai ]; then
-			ln -s ${bam_files}.bai ${indiv_id}.bam.bai
-		else
-			samtools index ${indiv_id}.bam
-		fi
-	fi
+	samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
+	samtools index ${indiv_id}.bam
 	"""
 }
 
@@ -211,7 +202,7 @@ workflow genotyping {
 	main:
 		merged_bamfiles = merge_bamfiles(
 			samples_aggregations
-				.map(it -> tuple(it[0], it[1].join(' '), it[1].size()))
+				.map(it -> tuple(it[0], it[1].join(' ')))
 		)
 		merged_bamfiles.take(5).view()
 		all_merged_files = merged_bamfiles.collect()
