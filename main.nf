@@ -14,14 +14,19 @@ process merge_bamfiles {
 	publishDir params.outdir + '/merged', mode: 'symlink'
 
 	input:
-	tuple val(indiv_id), val(bam_files)
+	tuple val(indiv_id), val(bam_files), val(bam_files_count)
 
 	output:
 	tuple val(indiv_id), path("${indiv_id}.bam"), path("${indiv_id}.bam.bai")
 	script:
 	"""
-	samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
-	samtools index ${indiv_id}.bam
+	if [[ bam_files_count > 1 ]]; then
+		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
+		samtools index ${indiv_id}.bam
+	else
+		cp -n ${bam_files} ${indiv_id}.bam
+		cp -n ${bam_files}.bai ${indiv_id}.bam.bai
+	fi
 	"""
 }
 
@@ -207,8 +212,8 @@ workflow genotyping {
 		all_merged_files[0].view()
 
 		genome_chunks = create_genome_chunks().flatMap( it.split() )
-		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
-		merge_vcfs(region_genotypes.collect())
+		// region_genotypes = call_genotypes(genome_chunks, all_merged_files)
+		// merge_vcfs(region_genotypes.collect())
 	emit:
 		merge_vcfs.out
 }
