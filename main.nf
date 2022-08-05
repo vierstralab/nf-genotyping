@@ -139,7 +139,7 @@ process merge_vcfs {
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 	script:
 	// TODO, use region for sorting
-	region_vcf_files = region_vcfs.map(it -> it.name).join('\n')
+	region_vcf_files = region_vcfs.map(t -> t.getName()).join('\n')
 	"""
 	# Concatenate files
 	echo ${region_vcf_files} > files.txt
