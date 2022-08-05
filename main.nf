@@ -55,21 +55,21 @@ process call_genotypes {
 
 	input:
 		val region
-		tuple val(indiv_ids), path(indiv_vcfs), path(indiv_vcf_indices)
+		tuple val(indiv_ids), path(indiv_bams), path(indiv_vcf_indices)
 
 	output:
 		tuple val(region), path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
 	indivs_file_content = indiv_ids.join('\n')
-	indiv_vcfs_content = indiv_vcfs.map(f -> f.getName()).join('\n')
+	indiv_bams_names = indiv_bams.map(f -> f.getName()).join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
 	echo ${indivs_file_content} > samples.txt
-	echo ${indiv_vcfs_content} > filelist.txt
+	echo ${indiv_bams_names} > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
@@ -204,7 +204,6 @@ workflow genotyping {
 			samples_aggregations
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		)
-		merged_bamfiles.take(5).view()
 		all_merged_files = merged_bamfiles.collect()
 
 		genome_chunks = create_genome_chunks().flatMap( it ->  it.split() )
