@@ -20,7 +20,7 @@ process merge_bamfiles {
 	tuple val(indiv_id), path("${indiv_id}.bam"), path("${indiv_id}.bam.bai")
 	script:
 	"""
-	if [ "${bam_files_count}" -gt "1" ]; then
+	if (()) ${bam_files_count} > 1 )); then
 		exit(1)
 		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
 		samtools index ${indiv_id}.bam
