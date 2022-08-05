@@ -25,7 +25,11 @@ process merge_bamfiles {
 		samtools index ${indiv_id}.bam
 	else
 		ln -s ${bam_files} ${indiv_id}.bam
-		ln -s ${bam_files}.bai ${indiv_id}.bam.bai
+		if [ -f {bam_files}.bai ]; then
+			ln -s ${bam_files}.bai ${indiv_id}.bam.bai
+		else
+			samtools index ${indiv_id}.bam
+		fi
 	fi
 	"""
 }
