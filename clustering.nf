@@ -24,8 +24,16 @@ process clusterIndivs {
     """
 }
 
-workflow {
-    vcf_and_index = Channel.value(params.genotype_file)
-    clusterIndivs(vcf_and_index)
+workflow clustering {
+    take:
+        vcfs_and_index
+    main:
+        clusterIndivs(vcf_and_index)
+    emit:
+        clusterIndivs.out
+}
 
+workflow {
+    vcfs_and_index = Channel.value(params.genotype_file)
+    clustering(vcfs_and_index)
 }

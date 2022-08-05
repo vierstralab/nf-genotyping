@@ -209,6 +209,8 @@ workflow genotyping {
 		genome_chunks = create_genome_chunks().flatMap{ it.split() }
 		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
 		merge_vcfs(region_genotypes.collect())
+	emit:
+		merge_vcfs.out
 }
 
 
