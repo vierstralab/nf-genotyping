@@ -24,7 +24,7 @@ process merge_bamfiles {
 		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
 		samtools index ${indiv_id}.bam
 	else
-		cp -n ${bam_files} ${indiv_id}.bam
+		ln -s ${bam_files} ${indiv_id}.bam
 		cp -n ${bam_files}.bai ${indiv_id}.bam.bai
 	fi
 	"""
