@@ -205,7 +205,10 @@ workflow genotyping {
 	take: 
 		samples_aggregations
 	main:
-		merged_bamfiles = merge_bamfiles(samples_aggregations)
+		merged_bamfiles = merge_bamfiles(
+			samples_aggregations
+				.map(it -> tuple(it[0], it[1], it[1].size()))
+		)
 		merged_bamfiles.take(5).view()
 		all_merged_files = merged_bamfiles.collect()
 		//all_merged_files.view()
@@ -225,7 +228,7 @@ workflow {
 		.splitCsv(header:true, sep:'\t')
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
 		.groupTuple()
-		.map( it -> tuple(it[0], it[1].join(' ')))
+		.map( it -> tuple(it[0], it[1]))
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
 }
