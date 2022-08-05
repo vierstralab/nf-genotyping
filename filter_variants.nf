@@ -1,9 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 1
 
-params.samples_file=''
-params.genotype_file=''
-
 // Read samples file
 Channel
 	.fromPath(params.samples_file)

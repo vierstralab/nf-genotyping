@@ -1,17 +1,9 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl = 1
+nextflow.enable.dsl = 2
 
 genome_fasta_file="${params.genome}"  + ".fa"
 genome_chrom_sizes_file="${params.genome}"  + ".chrom_sizes"
 
-// Read samples file
-Channel
-	.fromPath(params.samples_file)
-	.splitCsv(header:true, sep:'\t')
-	.map(row -> tuple( row.indiv_id, row.bam_file ))
-	.groupTuple()
-	.map( it -> tuple(it[0], it[1].join(' ')))
-	.set{ SAMPLES_AGGREGATIONS_MERGE }
 // Merge BAM files by inidividual
 
 process merge_bamfiles {
@@ -22,11 +14,10 @@ process merge_bamfiles {
 	publishDir params.outdir + '/merged', mode: 'symlink'
 
 	input:
-	set val(indiv_id), val(bam_files) from SAMPLES_AGGREGATIONS_MERGE
+	tuple val(indiv_id), val(bam_files)
 
 	output:
-	set val(indiv_id), file("${indiv_id}.bam"), file("${indiv_id}.bam.bai") into INDIV_MERGED_FILES, INDIV_MERGED_LIST
-
+	tuple val(indiv_id), path("${indiv_id}.bam"), path("${indiv_id}.bam.bai")
 	script:
 	"""
 	samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
@@ -34,40 +25,18 @@ process merge_bamfiles {
 	"""
 }
 
-
-// Create sample map file which is used by bcftools to specific input BAM files
-INDIV_MERGED_LIST
-	.map{ [it[0], file(it[1]).name].join("\t") }
-	.collectFile(
-		name: 'sample_indiv_map.tsv',
-		newLine: true
-	).map{
-		it -> tuple(it, it.countLines())
-	}
-	.first()
-	.set{ INDIV_MERGED_SAMPLE_MAP_FILE }
-
-// Channel containing all files needed by bcftools to call genotypes (both VCF and its corresponding index)
-INDIV_MERGED_FILES
-	.flatMap{ [file(it[1]), file(it[2])] }
-	.set{ INDIV_MERGED_ALL_FILES }
-
 // Chunk genome up
 process create_genome_chunks {
 	executor 'local'
 
-	input:
-	file chrom_sizes from file(genome_chrom_sizes_file)
-	val chunksize from params.chunksize
-
 	output:
-	stdout into GENOME_CHUNKS
+		stdout
 
 	script:
 	"""
-	cat ${chrom_sizes} \
+	cat ${params.chrom_sizes} \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
-  	| awk -v step=${chunksize} -v OFS="\t" \
+  	| awk -v step=${params.chunksize} -v OFS="\t" \
 		'{ \
 			for(i=step; i<=\$2; i+=step) { \
 				print \$1":"i-step+1"-"i; \
@@ -77,10 +46,6 @@ process create_genome_chunks {
 	"""
 } 
 
-GENOME_CHUNKS
-	.flatMap{ it.split() }
-	.set{ GENOME_CHUNKS_MAP }
-
 // Call genotypes per region
 process call_genotypes {
 	tag "Region: ${region}"
@@ -89,33 +54,30 @@ process call_genotypes {
 	cpus 2
 
 	input:
-	file genome_fasta from file(genome_fasta_file)
-	file dbsnp_file from file(params.dbsnp_file)
-	file dbsnp_index_file from file("${params.dbsnp_file}.tbi")
-	val region from GENOME_CHUNKS_MAP
-	file '*' from INDIV_MERGED_ALL_FILES.collect()
-	tuple file(indiv_map), val(m_depth) from INDIV_MERGED_SAMPLE_MAP_FILE 
+		val region
+		tuple val(indiv_ids), path(indiv_vcfs), path(indiv_vcf_indices)
 
 	output:
-	file '*filtered.annotated.vcf.gz*' into GENOME_CHUNKS_VCF
+		tuple val(region), path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
+	indivs_file_content = indiv_ids.join('\n')
+	indiv_vcfs_content = indiv_vcfs.map(it -> it.name).join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-	echo $m_depth
-	cut -f1 ${indiv_map} > samples.txt
-	cut -f2 ${indiv_map} > filelist.txt
+	echo ${indivs_file_content} > samples.txt
+	echo ${indiv_vcfs_content} > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
-		--fasta-ref ${genome_fasta} \
+		--fasta-ref ${genome_fasta_file} \
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth ${m_depth * 25} --max-idepth ${m_depth * 500} \
+		--max-depth ${n_indivs * 500} \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
@@ -139,7 +101,7 @@ process call_genotypes {
 		--threads ${task.cpus} \
 		--check-ref w \
 		-m - \
-		--fasta-ref ${genome_fasta} \
+		--fasta-ref ${genome_fasta_file} \
 	| bcftools filter \
 		-i"QUAL>=${params.min_SNPQ} & FORMAT/GQ>=${params.min_GQ} & FORMAT/DP>=${params.min_DP}" \
 		--SnpGap 3 --IndelGap 10 --set-GTs . \
@@ -154,7 +116,7 @@ process call_genotypes {
 
 	bcftools annotate \
 		-r ${region} \
-		-a ${dbsnp_file} \
+		-a ${params.dbsnp_file} \
 		--columns ID,CAF,TOPMED \
 		--output-type z \
   		${region}.filtered.vcf.gz \
@@ -171,15 +133,16 @@ process merge_vcfs {
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:
-	file '*' from GENOME_CHUNKS_VCF.collect()
-	file genome_fasta_ancestral from file(params.genome_ancestral_fasta_file)
+		tuple val(region), path(region_vcfs), path(region_vcf_index)
 
 	output:
-	set file('all.filtered.snps.annotated.vcf.gz'), file('all.filtered.snps.annotated.vcf.gz.csi') into FILTERED_SNPS_VCF
+		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 	script:
+	// TODO, use region for sorting
+	region_vcf_files = region_vcfs.map(it -> it.name).join('\n')
 	"""
 	# Concatenate files
-	ls *.filtered.annotated.vcf.gz > files.txt
+	echo ${region_vcf_files} > files.txt
 	cat files.txt | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
@@ -203,7 +166,7 @@ process merge_vcfs {
 	echo '##INFO=<ID=AA,Number=1,Type=String,Description="Inferred ancestral allele -- EPO/PECAN alignments">' > header.txt
 
 	# Contigs with ancestral allele information
-	faidx -i chromsizes ${genome_fasta_ancestral} | cut -f1 > chroms.txt
+	faidx -i chromsizes ${params.genome_ancestral_fasta_file} | cut -f1 > chroms.txt
 	
 	# Get SNPs in BED-format; remove contigs with no FASTA sequence
 	bcftools query  -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" all.filtered.snps.vcf.gz \
@@ -213,7 +176,7 @@ process merge_vcfs {
 	# Get ancestral allele from FASTA file and make a TABIX file
 	faidx -i transposed \
 		-b all.filtered.snps.bed \
-		${genome_fasta_ancestral} \
+		${params.genome_ancestral_fasta_file} \
 	| paste - all.filtered.snps.bed	\
 	| awk -v OFS="\t" '{ print \$5, \$7, \$4; }' \
 	| bgzip -c > all.filtered.snps.ancestral.tab.gz
@@ -231,4 +194,31 @@ process merge_vcfs {
 	
 	bcftools index all.filtered.snps.annotated.vcf.gz
 	"""
+}
+
+workflow genotyping {
+	take: 
+		samples_aggregations
+	main:
+		merged_bamfiles = merge_bamfiles(samples_aggregations)
+
+		all_merged_files = merged_bamfiles.collect()
+		all_merged_files.view()
+		all_merged_files[0].view()
+
+		genome_chunks = create_genome_chunks().flatMap{ it.split() }
+		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
+		merge_vcfs(region_genotypes.collect())
+}
+
+
+workflow {
+	SAMPLES_AGGREGATIONS_MERGE = Channel
+		.fromPath(params.samples_file)
+		.splitCsv(header:true, sep:'\t')
+		.map(row -> tuple( row.indiv_id, row.bam_file ))
+		.groupTuple()
+		.map( it -> tuple(it[0], it[1].join(' ')))
+	genotyping(SAMPLES_AGGREGATIONS_MERGE)
+
 }
