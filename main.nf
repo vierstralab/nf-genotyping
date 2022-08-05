@@ -207,7 +207,7 @@ workflow genotyping {
 	main:
 		merged_bamfiles = merge_bamfiles(
 			samples_aggregations
-				.map(it -> tuple(it[0], it[1], it[1].size()))
+				.map(it -> tuple(it[0], it[1].join(' '), it[1].size()))
 		)
 		merged_bamfiles.take(5).view()
 		all_merged_files = merged_bamfiles.collect()
