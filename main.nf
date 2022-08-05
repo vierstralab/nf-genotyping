@@ -20,12 +20,13 @@ process merge_bamfiles {
 	tuple val(indiv_id), path("${indiv_id}.bam"), path("${indiv_id}.bam.bai")
 	script:
 	"""
-	if [[ bam_files_count > 1 ]]; then
+	if [[ ${bam_files_count} > 1 ]]; then
+		exit(1)
 		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
 		samtools index ${indiv_id}.bam
 	else
 		ln -s ${bam_files} ${indiv_id}.bam
-		cp -n ${bam_files}.bai ${indiv_id}.bam.bai
+		ln -s ${bam_files}.bai ${indiv_id}.bam.bai
 	fi
 	"""
 }
@@ -211,8 +212,7 @@ workflow genotyping {
 		)
 		merged_bamfiles.take(5).view()
 		all_merged_files = merged_bamfiles.collect()
-		//all_merged_files.view()
-		//all_merged_files[0].view()
+		all_merged_files[0].take(5).view()
 
 		//genome_chunks = create_genome_chunks().flatMap( it.split() )
 		// region_genotypes = call_genotypes(genome_chunks, all_merged_files)
