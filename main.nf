@@ -40,7 +40,7 @@ process create_genome_chunks {
 
 	script:
 	"""
-	cat ${params.chrom_sizes} \
+	cat ${genome_chrom_sizes_file} \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
   	| awk -v step=${params.chunksize} -v OFS="\t" \
 		'{ \
