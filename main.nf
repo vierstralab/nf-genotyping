@@ -130,7 +130,7 @@ process merge_vcfs {
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:
-		val(region_vcfs)
+		val region_vcfs
 
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
@@ -205,7 +205,6 @@ workflow genotyping {
 		all_merged_files = merged_bamfiles.transpose()
 			.map(it -> it.join('\n'))
 			.toList()
-		all_merged_files.view()
 		genome_chunks = create_genome_chunks()
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files).combine(n_indivs)
