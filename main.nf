@@ -126,6 +126,7 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 
+	cache true
 	scratch true
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
@@ -208,8 +209,7 @@ workflow genotyping {
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files).combine(n_indivs)
 		region_genotypes = call_genotypes(genome_chunks)
-		region_genotypes.map(it -> it[0]).collect().view()
-		merge_vcfs(region_genotypes.map(it -> it[0]).collect())
+		merge_vcfs(region_genotypes.map(it -> it[0]).toList().join('\n'))
 	emit:
 		merge_vcfs.out
 }
