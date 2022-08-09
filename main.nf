@@ -72,6 +72,7 @@ process call_genotypes {
 		--regions ${region} \
 		--fasta-ref ${genome_fasta_file} \
 		--redo-BAQ \
+		-I \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
 		--max-depth ${n_indivs * 500} \
