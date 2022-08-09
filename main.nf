@@ -57,7 +57,7 @@ process call_genotypes {
 		tuple val(region), val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices), val(n_indivs)
 
 	output:
-		tuple path("${region}.filtered.annotated.vcf.gz")
+		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
 	"""
@@ -130,7 +130,7 @@ process merge_vcfs {
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:
-		val region_vcfs
+		val(region_vcfs)
 
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
@@ -210,7 +210,7 @@ workflow genotyping {
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files).combine(n_indivs)
 		region_genotypes = call_genotypes(genome_chunks)
-		merge_vcfs(region_genotypes.collect())
+		merge_vcfs(region_genotypes.map(it -> it[0]).collect())
 	emit:
 		merge_vcfs.out
 }
