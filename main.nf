@@ -209,7 +209,7 @@ workflow genotyping {
 			.combine(all_merged_files).combine(n_indivs)
 		region_genotypes = call_genotypes(genome_chunks)
 		region_genotypes.map(it -> it[0]).collect().view()
-		merge_vcfs(region_genotypes.map(it -> it[0]).collect().join('\n'))
+		merge_vcfs(region_genotypes.map(it -> it[0]).collect())
 	emit:
 		merge_vcfs.out
 }
