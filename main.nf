@@ -204,10 +204,10 @@ workflow genotyping {
 			samples_aggregations
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		)
-		all_merged_files = merged_bamfiles.toList()
+		all_merged_files = merged_bamfiles.groupTuple().collect()
 
 		genome_chunks = create_genome_chunks().flatMap( it ->  it.split() )
-		all_merged_files.take(3).view()
+		all_merged_files.view()
 		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
 		merge_vcfs(region_genotypes.collect())
 	emit:
