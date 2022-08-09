@@ -201,7 +201,7 @@ workflow genotyping {
 			samples_aggregations
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		).toList()
-		n_indivs = merge_bamfiles.size
+		n_indivs = merged_bamfiles.size()
 		all_merged_files = merged_bamfiles.transpose()
 			.map(it -> it.join('\n'))
 			.toList()
