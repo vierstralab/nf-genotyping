@@ -135,11 +135,9 @@ process merge_vcfs {
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 	script:
-	// TODO, use region for sorting
-	region_vcf_files = region_vcfs.map(t -> t.getName()).join('\n')
 	"""
 	# Concatenate files
-	echo ${region_vcfs} > files.txt
+	echo "${region_vcfs}" > files.txt
 	cat files.txt | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
@@ -202,6 +200,7 @@ workflow genotyping {
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		).toList()
 		n_indivs = merged_bamfiles.size()
+		// Workaround. Collect uses flatMap which doesn't suit here
 		all_merged_files = merged_bamfiles.transpose()
 			.map(it -> it.join('\n'))
 			.toList()
