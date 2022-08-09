@@ -207,6 +207,7 @@ workflow genotyping {
 		all_merged_files = merged_bamfiles.toList()
 
 		genome_chunks = create_genome_chunks().flatMap( it ->  it.split() )
+		all_merged_files.take(3).view()
 		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
 		merge_vcfs(region_genotypes.collect())
 	emit:
