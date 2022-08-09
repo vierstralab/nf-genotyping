@@ -54,7 +54,7 @@ process call_genotypes {
 	cpus 2
 
 	input:
-		tuple val(region), val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices)
+		tuple val(region), val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices), val(n_indivs)
 
 	output:
 		tuple val(region), path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -201,7 +201,7 @@ workflow genotyping {
 			samples_aggregations
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		).toList()
-		n_indivs = merge_bamfiles.size()
+		n_indivs = merge_bamfiles.size
 		all_merged_files = merged_bamfiles.transpose()
 			.map(it -> it.join('\n'))
 			.toList()
