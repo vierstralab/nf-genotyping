@@ -204,8 +204,8 @@ workflow genotyping {
 			samples_aggregations
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		)
-		
-		all_merged_files = merged_bamfiles.flatMap().buffer(merge_bamfiles.size(), 3)
+		elements = merge_bamfiles.toList().size()
+		all_merged_files = merged_bamfiles.flatMap().buffer(, 3)
 		all_merged_files.view()
 		all_merged_files = all_merged_files.collect()
 
