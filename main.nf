@@ -65,8 +65,8 @@ process call_genotypes {
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-	echo ${indiv_ids} > samples.txt
-	echo ${indiv_bams} > filelist.txt
+	echo "${indiv_ids}" > samples.txt
+	echo "${indiv_bams}" > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
