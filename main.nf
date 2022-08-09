@@ -202,8 +202,8 @@ workflow genotyping {
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		)
 
-		all_merged_files = merged_bamfiles.toList().transpose().map(it -> it.join('\n')).first()
-		
+		all_merged_files = merged_bamfiles.toList().transpose().map(it -> it.join('\n')).toList()
+		all_merged_files.view()
 		genome_chunks = create_genome_chunks()
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files)
