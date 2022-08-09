@@ -136,9 +136,10 @@ process merge_vcfs {
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 	script:
+	region_vcf_names = region_vcfs.join('\n')
 	"""
 	# Concatenate files
-	echo "${region_vcfs}" > files.txt
+	echo "${region_vcf_names}" > files.txt
 	cat files.txt | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
@@ -209,7 +210,7 @@ workflow genotyping {
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files).combine(n_indivs)
 		region_genotypes = call_genotypes(genome_chunks)
-		merge_vcfs(region_genotypes.map(it -> it[0]).toList().join('\n'))
+		merge_vcfs(region_genotypes.map(it -> it[0]).toList())
 	emit:
 		merge_vcfs.out
 }
