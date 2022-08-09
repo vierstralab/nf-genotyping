@@ -200,13 +200,15 @@ workflow genotyping {
 		merged_bamfiles = merge_bamfiles(
 			samples_aggregations
 				.map(it -> tuple(it[0], it[1].join(' ')))
-		)
-
-		all_merged_files = merged_bamfiles.toList().transpose().map(it -> it.join('\n')).toList()
+		).toList()
+		n_indivs = merge_bamfiles.size()
+		all_merged_files = merged_bamfiles.transpose()
+			.map(it -> it.join('\n'))
+			.toList()
 		all_merged_files.view()
 		genome_chunks = create_genome_chunks()
 			.flatMap( it ->  it.split() )
-			.combine(all_merged_files)
+			.combine(all_merged_files).combine(n_indivs)
 		genome_chunks.take(10).view()
 		region_genotypes = call_genotypes(genome_chunks)
 		merge_vcfs(region_genotypes.collect())
