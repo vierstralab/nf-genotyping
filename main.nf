@@ -10,19 +10,27 @@ process merge_bamfiles {
 	tag "${indiv_id}"
 
 	cpus 2
-
-	publishDir params.outdir + '/merged', mode: 'symlink'
+	publishDir "${params.outdir}/merged"
 
 	input:
 	tuple val(indiv_id), val(bam_files)
 
 	output:
-	tuple val(indiv_id), path("${indiv_id}.bam"), path("${indiv_id}.bam.bai")
+	tuple val(indiv_id), path(name), path("${name}.bai")
 	script:
-	"""
-	samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${indiv_id}.bam ${bam_files}
-	samtools index ${indiv_id}.bam
-	"""
+	// FIXME get extension from file list
+	name = "${indiv_id}.cram"
+	if ( bam_files.split(' ').size() > 1 )
+		
+		"""
+		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${name} ${bam_files}
+		samtools index ${name}
+		"""
+	else
+		"""
+		ln -s ${bam_files} ${workDir}/${name}
+		samtools index ${name}
+		"""
 }
 
 // Chunk genome up
