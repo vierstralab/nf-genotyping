@@ -54,8 +54,7 @@ process call_genotypes {
 	cpus 2
 
 	input:
-		val region
-		tuple val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices)
+		tuple val(region), val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices)
 
 	output:
 		tuple val(region), path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -204,11 +203,12 @@ workflow genotyping {
 		)
 
 		all_merged_files = merged_bamfiles.toList().transpose().map(it -> it.join('\n')).first()
-
-		genome_chunks = create_genome_chunks().flatMap( it ->  it.split() )
+		
+		genome_chunks = create_genome_chunks()
+			.flatMap( it ->  it.split() )
+			.combine(all_merged_files)
 		genome_chunks.take(10).view()
-		all_merged_files.view()
-		region_genotypes = call_genotypes(genome_chunks, all_merged_files)
+		region_genotypes = call_genotypes(genome_chunks)
 		merge_vcfs(region_genotypes.collect())
 	emit:
 		merge_vcfs.out
