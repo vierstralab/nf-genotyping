@@ -57,7 +57,7 @@ process call_genotypes {
 		tuple val(region), val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices), val(n_indivs)
 
 	output:
-		tuple val(region), path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
+		tuple path("${region}.filtered.annotated.vcf.gz")
 
 	script:
 	"""
@@ -130,7 +130,7 @@ process merge_vcfs {
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:
-		tuple val(region), path(region_vcfs), path(region_vcf_index)
+		val region_vcfs
 
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
@@ -139,7 +139,7 @@ process merge_vcfs {
 	region_vcf_files = region_vcfs.map(t -> t.getName()).join('\n')
 	"""
 	# Concatenate files
-	echo ${region_vcf_files} > files.txt
+	echo ${region_vcfs} > files.txt
 	cat files.txt | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
@@ -209,7 +209,6 @@ workflow genotyping {
 		genome_chunks = create_genome_chunks()
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files).combine(n_indivs)
-		genome_chunks.take(10).view()
 		region_genotypes = call_genotypes(genome_chunks)
 		merge_vcfs(region_genotypes.collect())
 	emit:
