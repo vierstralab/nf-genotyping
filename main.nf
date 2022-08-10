@@ -42,7 +42,7 @@ process create_genome_chunks {
 
 	script:
 	"""
-	cat ${genome_chrom_sizes_file} \
+	cat ${genome_chrom_sizes_file} | grep chr15 \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
   	| awk -v step=${params.chunksize} -v OFS="\t" \
 		'{ \
@@ -57,7 +57,7 @@ process create_genome_chunks {
 // Call genotypes per region
 process call_genotypes {
 	tag "Region: ${region}"
-	
+	cache true
 	scratch true
 	cpus 2
 
