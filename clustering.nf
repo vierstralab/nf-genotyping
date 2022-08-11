@@ -2,7 +2,7 @@
 nextflow.enable.dsl = 2
 
 
-process clusterIndivs {
+process cluster_indivs {
 
     publishDir "${params.outdir}/clustering"
 
@@ -17,7 +17,7 @@ process clusterIndivs {
     --out snps.clustering \
     --vcf ${vcf_file}
 
-    python3 $baseDir/bin/cluster_king.py --matrix snps.clustering.king \
+    python3 $moduleDir/bin/cluster_king.py --matrix snps.clustering.king \
     --matrix-ids snps.clustering.king.id \
     --meta-file ${params.samples_file} \
     --outpath ./
@@ -28,9 +28,9 @@ workflow clustering {
     take:
         vcfs_and_index
     main:
-        clusterIndivs(vcf_and_index)
+        cluster_indivs(vcf_and_index)
     emit:
-        clusterIndivs.out
+        cluster_indivs.out
 }
 
 workflow {

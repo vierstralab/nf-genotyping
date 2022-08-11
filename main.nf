@@ -16,7 +16,7 @@ process merge_bamfiles {
 	tuple val(indiv_id), val(bam_files)
 
 	output:
-	tuple val(indiv_id), path(name), path("${name}.bai")
+	tuple val(indiv_id), path(name), path("${name}.*ai")
 	script:
 	// FIXME get extension from file list
 	name = "${indiv_id}.cram"

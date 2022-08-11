@@ -1,12 +1,5 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl = 1
-
-// Read samples file
-Channel
-	.fromPath(params.samples_file)
-	.splitCsv(header:true, sep:'\t')
-	.map{ row -> tuple( row.indiv_id, row.hotspots_file, row.filtered_sites_file ) }
-	.set{ INDIV_CELL_TYPE }
+nextflow.enable.dsl = 2
 
 process filter_variants {
 	tag "${outname}"
@@ -14,10 +7,7 @@ process filter_variants {
 	publishDir "${params.outdir}/bed_files", mode: 'symlink'
 
 	input:
-	tuple val(indiv_id), val(hotspots_file), val(outname) from INDIV_CELL_TYPE
-	
-	file genotype_file from file(params.genotype_file)
-	file '*' from file("${params.genotype_file}.csi")
+	tuple val(indiv_id), val(hotspots_file), val(outname)
 
 	output:
 	tuple file(outname), file("${outname}.tbi")
@@ -28,7 +18,7 @@ process filter_variants {
 		-s ${indiv_id} \
 		-i'GT="alt"' \
 		-f'%CHROM\\t%POS0\\t%POS\\t%ID\\t%REF\\t%ALT\\t%INFO/MAF\\t[%GT\\t%GQ\\t%DP\\t%AD{0}\\t%AD{1}]\\n' \
-		${genotype_file} \
+		${params.genotype_file} \
 	| awk -v OFS="\\t" \
 		-v min_GQ=${params.min_GQ} -v min_AD=${params.min_AD} -v min_DP=${params.min_DP}\
 		'\$9<min_GQ { next; } \$10<min_DP { next; }\
@@ -44,3 +34,20 @@ process filter_variants {
 	"""
 }
 
+workflow filterVariants {
+	take:
+		indiv_cell_types_meta
+	main:
+		filter_variants(indiv_cell_types_meta)
+	emit:
+		filter_variants.out
+}
+
+workflow {
+	// Read samples file
+	INDIV_CELL_TYPE = Channel
+		.fromPath(params.samples_file)
+		.splitCsv(header:true, sep:'\t')
+		.map{ row -> tuple( row.indiv_id, row.hotspots_file, row.filtered_sites_file ) }
+	filterVariants(INDIV_CELL_TYPE)
+}
