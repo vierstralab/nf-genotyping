@@ -83,7 +83,7 @@ process call_genotypes {
 		-I \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth ${n_indivs * 500} \
+		--max-depth ${n_indivs * 100} \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
