@@ -28,7 +28,7 @@ process merge_bamfiles {
 		"""
 	else
 		"""
-		ln -s ${bam_files} ${name}
+		ln -sf ${bam_files} ${name}
 		samtools index ${name}
 		"""
 }
