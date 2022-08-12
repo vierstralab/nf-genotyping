@@ -28,7 +28,7 @@ workflow clustering {
     take:
         vcfs_and_index
     main:
-        cluster_indivs(vcf_and_index)
+        cluster_indivs(vcfs_and_index)
     emit:
         cluster_indivs.out
 }
