@@ -211,7 +211,7 @@ workflow genotyping {
 				.map(it -> tuple(it[0], it[1].join(' ')))
 		).toList()
 		n_indivs = merged_bamfiles.size()
-		// Workaround. Collect uses flatMap which doesn't work here
+		// Workaround. Collect uses flatMap, which won't work here
 		all_merged_files = merged_bamfiles.transpose()
 			.map(it -> it.join('\n'))
 			.toList()
