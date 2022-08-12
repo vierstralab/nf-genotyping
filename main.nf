@@ -10,7 +10,6 @@ process merge_bamfiles {
 	tag "${indiv_id}"
 
 	cpus 2
-	publishDir "${params.outdir}/merged"
 
 	input:
 	tuple val(indiv_id), val(bam_files)
