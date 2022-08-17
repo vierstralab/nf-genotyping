@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+conda_env = "$moduleDir/environment.yml"
 
 process cluster_indivs {
 

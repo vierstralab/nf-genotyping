@@ -1,31 +1,30 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-genome_fasta_file="${params.genome}"  + ".fa"
-genome_chrom_sizes_file="${params.genome}"  + ".chrom_sizes"
+conda_env = "$moduleDir/environment.yml"
 
 // Merge BAM files by inidividual
-
 process merge_bamfiles {
 	tag "${indiv_id}"
-
+	conda conda_env
 	cpus 2
 
 	input:
-	tuple val(indiv_id), val(bam_files)
+		tuple val(indiv_id), val(bam_files)
 
 	output:
-	tuple val(indiv_id), path(name), path("${name}.*ai")
+		tuple val(indiv_id), path(name), path("${name}.*ai")
+
 	script:
-	// FIXME get extension from file list
-	name = "${indiv_id}.cram"
 	if ( bam_files.split(' ').size() > 1 )
-		
+		name = "${indiv_id}.cram"
 		"""
-		samtools merge -f -@${task.cpus} --reference ${genome_fasta_file} ${name} ${bam_files}
+		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
 		samtools index ${name}
 		"""
 	else
+		bam_ext = file(bam_files).getExtension()
+		name = "${indiv_id}.${bam_ext}"
 		"""
 		ln -sf ${bam_files} ${name}
 		samtools index ${name}
@@ -41,7 +40,7 @@ process create_genome_chunks {
 
 	script:
 	"""
-	cat ${genome_chrom_sizes_file} \
+	cat ${params.genome_chrom_sizes} \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
   	| awk -v step=${params.chunksize} -v OFS="\t" \
 		'{ \
@@ -56,8 +55,8 @@ process create_genome_chunks {
 // Call genotypes per region
 process call_genotypes {
 	tag "Region: ${region}"
-	cache true
 	scratch true
+	conda conda_env
 	cpus 2
 
 	input:
@@ -77,7 +76,7 @@ process call_genotypes {
 
 	bcftools mpileup \
 		--regions ${region} \
-		--fasta-ref ${genome_fasta_file} \
+		--fasta-ref ${params.genome_fasta_file} \
 		--redo-BAQ \
 		-I \
 		--adjust-MQ 50 \
@@ -106,7 +105,7 @@ process call_genotypes {
 		--threads ${task.cpus} \
 		--check-ref w \
 		-m - \
-		--fasta-ref ${genome_fasta_file} \
+		--fasta-ref ${params.genome_fasta_file} \
 	| bcftools filter \
 		-i"QUAL>=${params.min_SNPQ} & FORMAT/GQ>=${params.min_GQ} & FORMAT/DP>=${params.min_DP}" \
 		--SnpGap 3 --IndelGap 10 --set-GTs . \
@@ -133,9 +132,8 @@ process call_genotypes {
 
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
-
-	cache true
 	scratch true
+	conda conda_env
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:
@@ -143,6 +141,7 @@ process merge_vcfs {
 
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
+
 	script:
 	region_vcf_names = region_vcfs.join('\n')
 	"""
@@ -230,7 +229,7 @@ workflow {
 		.splitCsv(header:true, sep:'\t')
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
 		.groupTuple()
-		.map( it -> tuple(it[0], it[1]))
+		.map(it -> tuple(it[0], it[1]))
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
 }

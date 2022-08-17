@@ -14,7 +14,7 @@ Samples BAM files are merged by corresponding individual and then used for a ``b
 
 ## Usage
 ```
-[jvierstra@dev0 ~]$ nextflow run main.nf -config nextflow.config -profile Altius
+[jvierstra@dev0 ~]$ nextflow run main.nf -profile Altius
 ```
 
 ## Input

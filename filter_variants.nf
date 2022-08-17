@@ -1,9 +1,11 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
+conda_env = "$moduleDir/environment.yml"
+
 process filter_variants {
 	tag "${outname}"
-
+	conda conda_env
 	publishDir "${params.outdir}/bed_files", mode: 'symlink'
 
 	input:
