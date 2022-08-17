@@ -229,7 +229,6 @@ workflow {
 		.splitCsv(header:true, sep:'\t')
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
 		.groupTuple()
-		.map(it -> tuple(it[0], it[1]))
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
 }

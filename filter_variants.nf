@@ -3,18 +3,20 @@ nextflow.enable.dsl = 2
 
 conda_env = "$moduleDir/environment.yml"
 
+// Might add some filtering for different ag_ids
 process filter_variants {
 	tag "${outname}"
 	conda conda_env
-	publishDir "${params.outdir}/bed_files", mode: 'symlink'
+	publishDir "${params.outdir}/bed_files"
 
 	input:
-	tuple val(indiv_id), val(hotspots_file), val(outname)
+		tuple val(indiv_id), val(ag_id)
 
 	output:
-	tuple file(outname), file("${outname}.tbi")
+		tuple val(indiv_id), val(ag_id), path(outname)
 
 	script:
+	outname = "${indiv_id}_${ag_id}.bed.gz"
 	"""
 	bcftools query \
 		-s ${indiv_id} \
@@ -36,13 +38,32 @@ process filter_variants {
 	"""
 }
 
+process extend_metadata {
+	publishDir params.outdir
+
+	input:
+		tuple val(indiv_id), val(ag_id), path(bed_files)
+
+	output:
+		path name
+
+	script:
+	name = 'metadata.with_intervals.txt'
+	column = ['filtered_sites_file', *bed_files].join('\n')
+	"""
+	echo "${column}" > columns.txt
+	paste ${params.samples_file} columns.txt > ${name}
+	"""
+}
+
 workflow filterVariants {
 	take:
 		indiv_cell_types_meta
 	main:
-		filter_variants(indiv_cell_types_meta)
+		filter_variants(indiv_cell_types_meta) | extend_metadata
 	emit:
 		filter_variants.out
+		extend_metadata.out
 }
 
 workflow {
@@ -50,6 +71,6 @@ workflow {
 	INDIV_CELL_TYPE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map{ row -> tuple( row.indiv_id, row.hotspots_file, row.filtered_sites_file ) }
+		.map{ row -> tuple(row.indiv_id, row.ag_id) }
 	filterVariants(INDIV_CELL_TYPE)
 }
