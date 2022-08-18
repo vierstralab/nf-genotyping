@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-conda_env = "$moduleDir/environment.yml"
+params.conda = "$moduleDir/environment.yml"
 
 // Merge BAM files by inidividual
 process merge_bamfiles {
 	tag "${indiv_id}"
-	conda conda_env
+	conda params.conda
 	cpus 2
 
 	input:
@@ -56,7 +56,7 @@ process create_genome_chunks {
 process call_genotypes {
 	tag "Region: ${region}"
 	scratch true
-	conda conda_env
+	conda params.conda
 	cpus 2
 
 	input:
@@ -133,7 +133,7 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	scratch true
-	conda conda_env
+	conda params.conda
 	publishDir params.outdir + '/genotypes', mode: 'symlink'
 
 	input:

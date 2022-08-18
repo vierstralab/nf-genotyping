@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-conda_env = "$moduleDir/environment.yml"
+params.conda = "$moduleDir/environment.yml"
 
 process cluster_indivs {
 
     publishDir "${params.outdir}/clustering"
-    conda conda_env
+    conda params.conda
 
     output:
         tuple path('metadata.clustered.tsv'), path('clustering.png')
