@@ -17,19 +17,19 @@ process merge_bamfiles {
 
 	script:
 	bam_files_names = bam_files.join(' ')
-	if ( bam_files.size() > 1 )
-		name = "${indiv_id}.cram"
+	// if ( bam_files.size() > 1 )
+	// 	name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files_names}
 		samtools index ${name}
 		"""
-	else
-		bam_ext = file(bam_files).extension
-		name = "${indiv_id}.${bam_ext}"
-		"""
-		ln -sf ${bam_files} ${name}
-		samtools index ${name}
-		"""
+	// else
+	// 	bam_ext = file(bam_files).extension
+	// 	name = "${indiv_id}.${bam_ext}"
+	// 	"""
+	// 	ln -sf ${bam_files} ${name}
+	// 	samtools index ${name}
+	// 	"""
 }
 
 // Chunk genome up
@@ -227,7 +227,7 @@ workflow {
 	SAMPLES_AGGREGATIONS_MERGE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map(row -> tuple( row.indiv_id, row.bam_file ))
+		.map(row -> tuple(row.indiv_id, row.bam_file))
 		.groupTuple()
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
