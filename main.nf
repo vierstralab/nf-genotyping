@@ -55,7 +55,7 @@ process create_genome_chunks {
 
 // Call genotypes per region
 process call_genotypes {
-	tag "Region: ${region}"
+	tag "${region}"
 	scratch true
 	conda params.conda
 	cpus 2
@@ -208,7 +208,7 @@ workflow genotyping {
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1]))
 		merged_bamfiles = merge_bamfiles(
-
+			bam_files
 		).toList()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
