@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-params.conda = "$moduleDir/environment.yml"
+//params.conda = "$moduleDir/environment.yml"
 
 // Merge BAM files by inidividual
 process merge_bamfiles {
