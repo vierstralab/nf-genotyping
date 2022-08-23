@@ -17,19 +17,20 @@ process merge_bamfiles {
 
 	script:
 	bam_files_names = bam_files.split(' ')
-	if ( bam_files_names.size() > 1 )
+	if ( bam_files_names.size() > 1 ) {
 		name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
 		samtools index ${name}
 		"""
-	else
+	} else {
 		bam_ext = file(bam_files).extension
 		name = "${indiv_id}.${bam_ext}"
 		"""
 		ln -sf ${bam_files} ${name}
 		samtools index ${name}
 		"""
+	}
 }
 
 // Chunk genome up
