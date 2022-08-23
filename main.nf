@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-params.conda = "$moduleDir/environment.yml"
+params.conda = "${moduleDir}/environment.yml"
 
 process merge_bamfiles {
 	tag "${indiv_id}"
@@ -24,7 +24,7 @@ process merge_bamfiles {
 		samtools index ${name}
 		"""
 	else
-		bam_ext = file(bam_files).getExtension()
+		bam_ext = file(bam_files).extension
 		name = "${indiv_id}.${bam_ext}"
 		"""
 		ln -sf ${bam_files} ${name}
