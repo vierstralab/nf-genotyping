@@ -3,10 +3,10 @@ nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
 
-// Merge BAM files by inidividual
 process merge_bamfiles {
 	tag "${indiv_id}"
-	//conda params.conda
+
+	conda params.conda
 	cpus 2
 
 	input:
@@ -16,7 +16,8 @@ process merge_bamfiles {
 		tuple val(indiv_id), path(name), path("${name}.*ai")
 
 	script:
-	if ( bam_files.split(' ').size() > 1 )
+	bam_files_names = bam_files.join(' ')
+	if ( bam_files.size() > 1 )
 		name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
@@ -134,7 +135,7 @@ process call_genotypes {
 process merge_vcfs {
 	scratch true
 	conda params.conda
-	publishDir params.outdir + '/genotypes', mode: 'symlink'
+	publishDir params.outdir + '/genotypes'
 
 	input:
 		val region_vcfs
@@ -204,9 +205,10 @@ workflow genotyping {
 	take: 
 		samples_aggregations
 	main:
+		bam_files = samples_aggregations
+			.map(it -> tuple(it[0], it[1]))
 		merged_bamfiles = merge_bamfiles(
-			samples_aggregations
-				.map(it -> tuple(it[0], it[1].join(' ')))
+
 		).toList()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
