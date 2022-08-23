@@ -16,22 +16,20 @@ process merge_bamfiles {
 		tuple val(indiv_id), path(name), path("${name}.*ai")
 
 	script:
-	bam_files_names = bam_files.join(' ')
-	if ( bam_files.size() > 1 ) {
+	bam_files_names = bam_files.split(' ')
+	if ( bam_files_names.size() > 1 )
 		name = "${indiv_id}.cram"
 		"""
-		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files_names}
+		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
 		samtools index ${name}
 		"""
-	}
-	else {
+	else
 		bam_ext = file(bam_files).extension
 		name = "${indiv_id}.${bam_ext}"
 		"""
 		ln -sf ${bam_files} ${name}
 		samtools index ${name}
 		"""
-	}
 }
 
 // Chunk genome up
@@ -208,7 +206,7 @@ workflow genotyping {
 		samples_aggregations
 	main:
 		bam_files = samples_aggregations
-			.map(it -> tuple(it[0], it[1]))
+			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files).toList()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
