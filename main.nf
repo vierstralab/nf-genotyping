@@ -17,19 +17,21 @@ process merge_bamfiles {
 
 	script:
 	bam_files_names = bam_files.join(' ')
-	// if ( bam_files.size() > 1 )
-	// 	name = "${indiv_id}.cram"
+	if ( bam_files.size() > 1 ) {
+		name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files_names}
 		samtools index ${name}
 		"""
-	// else
-	// 	bam_ext = file(bam_files).extension
-	// 	name = "${indiv_id}.${bam_ext}"
-	// 	"""
-	// 	ln -sf ${bam_files} ${name}
-	// 	samtools index ${name}
-	// 	"""
+	}
+	else {
+		bam_ext = file(bam_files).extension
+		name = "${indiv_id}.${bam_ext}"
+		"""
+		ln -sf ${bam_files} ${name}
+		samtools index ${name}
+		"""
+	}
 }
 
 // Chunk genome up
@@ -208,16 +210,16 @@ workflow genotyping {
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1]))
 		merged_bamfiles = merge_bamfiles(bam_files).toList()
-		// n_indivs = merged_bamfiles.size()
-		// // Workaround. Collect uses flatMap, which won't work here
-		// all_merged_files = merged_bamfiles.transpose()
-		// 	.map(it -> it.join('\n'))
-		// 	.toList()
-		// genome_chunks = create_genome_chunks()
-		// 	.flatMap( it ->  it.split() )
-		// 	.combine(all_merged_files).combine(n_indivs)
-		// region_genotypes = call_genotypes(genome_chunks)
-		// merge_vcfs(region_genotypes.map(it -> it[0]).toList())
+		n_indivs = merged_bamfiles.size()
+		// Workaround. Collect uses flatMap, which won't work here
+		all_merged_files = merged_bamfiles.transpose()
+			.map(it -> it.join('\n'))
+			.toList()
+		genome_chunks = create_genome_chunks()
+			.flatMap( it ->  it.split() )
+			.combine(all_merged_files).combine(n_indivs)
+		region_genotypes = call_genotypes(genome_chunks)
+		merge_vcfs(region_genotypes.map(it -> it[0]).toList())
 	emit:
 		merge_vcfs.out
 }
@@ -227,7 +229,7 @@ workflow {
 	SAMPLES_AGGREGATIONS_MERGE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map(row -> tuple(row.indiv_id, row.bam_file))
+		.map(row -> tuple( row.indiv_id, row.bam_file ))
 		.groupTuple()
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
