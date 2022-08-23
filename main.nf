@@ -57,7 +57,7 @@ process create_genome_chunks {
 process call_genotypes {
 	tag "${region}"
 	scratch true
-	conda params.conda
+	conda "${params.conda}"
 	cpus 2
 
 	input:
@@ -134,7 +134,7 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	scratch true
-	conda params.conda
+	conda "${params.conda}"
 	publishDir params.outdir + '/genotypes'
 
 	input:
