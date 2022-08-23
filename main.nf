@@ -208,16 +208,16 @@ workflow genotyping {
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1]))
 		merged_bamfiles = merge_bamfiles(bam_files).toList()
-		n_indivs = merged_bamfiles.size()
-		// Workaround. Collect uses flatMap, which won't work here
-		all_merged_files = merged_bamfiles.transpose()
-			.map(it -> it.join('\n'))
-			.toList()
-		genome_chunks = create_genome_chunks()
-			.flatMap( it ->  it.split() )
-			.combine(all_merged_files).combine(n_indivs)
-		region_genotypes = call_genotypes(genome_chunks)
-		merge_vcfs(region_genotypes.map(it -> it[0]).toList())
+		// n_indivs = merged_bamfiles.size()
+		// // Workaround. Collect uses flatMap, which won't work here
+		// all_merged_files = merged_bamfiles.transpose()
+		// 	.map(it -> it.join('\n'))
+		// 	.toList()
+		// genome_chunks = create_genome_chunks()
+		// 	.flatMap( it ->  it.split() )
+		// 	.combine(all_merged_files).combine(n_indivs)
+		// region_genotypes = call_genotypes(genome_chunks)
+		// merge_vcfs(region_genotypes.map(it -> it[0]).toList())
 	emit:
 		merge_vcfs.out
 }
