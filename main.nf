@@ -20,7 +20,7 @@ process merge_bamfiles {
 	if ( bam_files.size() > 1 )
 		name = "${indiv_id}.cram"
 		"""
-		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
+		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files_names}
 		samtools index ${name}
 		"""
 	else
@@ -207,9 +207,7 @@ workflow genotyping {
 	main:
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1]))
-		merged_bamfiles = merge_bamfiles(
-			bam_files
-		).toList()
+		merged_bamfiles = merge_bamfiles(bam_files).toList()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
 		all_merged_files = merged_bamfiles.transpose()
