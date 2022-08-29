@@ -34,7 +34,7 @@ process filter_variants {
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${outname}
 	# Check if file is empty
-	if [ -s  ${outname} ]
+	if [[ \$(wc -l <${outname}) -ge 1 ]];
 	then
 		echo 'NON EMPTY'
 		tabix -f -p bed "${outname}"
