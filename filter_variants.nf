@@ -34,9 +34,12 @@ process filter_variants {
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${outname}
 	# Check if file is empty
-	if [ -s  ${outname} ]; then
-		tabix -f -p bed ${outname}
+	if [ -s  ${outname} ]
+	then
+		echo 'NON EMPTY'
+		tabix -f -p bed "${outname}"
 	else
+		echo 'EMPTY'
 		touch "${outname}.tbi"
 	fi
 	"""
