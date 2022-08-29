@@ -72,6 +72,6 @@ workflow {
 	INDIV_CELL_TYPE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map{ row -> tuple(row.indiv_id, row.ag_id, row.join('\t')) }
+		.map(row -> tuple(row.indiv_id, row.ag_id))
 	filterVariants(INDIV_CELL_TYPE)
 }
