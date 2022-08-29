@@ -13,7 +13,7 @@ process filter_variants {
 		val indiv_id
 
 	output:
-		tuple val(indiv_id), path(outname)//, path("${outname}.tbi")
+		tuple val(indiv_id), path(outname), path("${outname}.tbi")
 
 	script:
 	outname = "${indiv_id}.bed.gz"
@@ -31,15 +31,9 @@ process filter_variants {
 			} \
 			{ print; }' \
 	| sort-bed - \
-	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
+	| grep -vq chrX | grep -vq chrY | grep -vq chrM | grep -vq _random | grep -vq _alt | grep -vq chrUn \
 	| bgzip -c > ${outname}
-	# Check if file is empty
-	#if [[ \$(wc -l <${outname}) -ge 1 ]];
-	#then
-	#	tabix -f -p bed "${outname}"
-	#else
-	#	touch "${outname}.tbi"
-	#fi
+	tabix -f -p bed "${outname}"
 	"""
 }
 
