@@ -49,9 +49,9 @@ process extend_metadata {
 
 	script:
 	name = 'metadata.with_intervals.txt'
-	column = ['filtered_sites_file', *bed_files].join('\n')
+	column = bed_files.join('\n')
 	"""
-	echo "${column}" > columns.txt
+	echo "filtered_sites_file\n${column}" > columns.txt
 	paste ${params.samples_file} columns.txt > ${name}
 	"""
 }

@@ -58,6 +58,7 @@ process create_genome_chunks {
 process call_genotypes {
 	tag "${region}"
 	scratch true
+	cache true
 	conda "${params.conda}"
 	cpus 2
 
