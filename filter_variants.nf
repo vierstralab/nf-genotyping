@@ -30,8 +30,9 @@ process filter_variants {
 				next; \
 			} \
 			{ print; }' \
-	| sort-bed - \
-	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
+	| sort-bed - > sorted.bed
+	head sorted.bed
+	cat sorted.bed | grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${outname}
 	# Check if file is empty
 	if [[ \$(wc -l <${outname}) -ge 1 ]];
