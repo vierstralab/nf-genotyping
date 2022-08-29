@@ -5,18 +5,18 @@ params.conda = "$moduleDir/environment.yml"
 
 // Might add some filtering for different ag_ids
 process filter_variants {
-	tag "${outname}"
+	tag "${indiv_id}"
 	conda params.conda
 	publishDir "${params.outdir}/bed_files"
 
 	input:
-		tuple val(indiv_id), val(ag_id)
+		val indiv_id
 
 	output:
-		tuple val(indiv_id), val(ag_id), path(outname), path("${outname}.tbi")
+		tuple val(indiv_id), path(outname), path("${outname}.tbi")
 
 	script:
-	outname = "${indiv_id}_${ag_id}.bed.gz"
+	outname = "${indiv_id}.bed.gz"
 	"""
 	bcftools query \
 		-s ${indiv_id} \
@@ -36,10 +36,8 @@ process filter_variants {
 	# Check if file is empty
 	if [[ \$(wc -l <${outname}) -ge 1 ]];
 	then
-		echo 'NON EMPTY'
 		tabix -f -p bed "${outname}"
 	else
-		echo 'EMPTY'
 		touch "${outname}.tbi"
 	fi
 	"""
@@ -79,6 +77,6 @@ workflow {
 	INDIV_CELL_TYPE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map(row -> tuple(row.indiv_id, row.ag_id))
+		.map(row -> row.indiv_id))
 	filterVariants(INDIV_CELL_TYPE)
 }
