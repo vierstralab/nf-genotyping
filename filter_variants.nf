@@ -33,8 +33,11 @@ process filter_variants {
 	| sort-bed - \
 	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${outname}
-
-	tabix -f -p bed ${outname}
+	if [ -s  ${outname} ]; then
+		tabix -f -p bed ${outname}
+	else
+		touch "${outname}.tbi"
+	fi
 	"""
 }
 
