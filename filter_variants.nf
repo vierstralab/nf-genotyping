@@ -29,8 +29,8 @@ process filter_variants {
 			(\$8=="0/1" || \$8=="1/0" || \$8=="0|1" || \$8=="1|0") && (\$11<min_AD || \$12<min_AD) { \
 				next; \
 			} \
-			{ print; }' \
-	| sort-bed - > sorted.bed
+			{ print; }' > f.bed
+	sort-bed f.bed > sorted.bed
 	head sorted.bed
 	cat sorted.bed | grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${outname}
