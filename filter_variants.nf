@@ -38,32 +38,33 @@ process filter_variants {
 	"""
 }
 
-process extend_metadata {
-	publishDir params.outdir
+// process extend_metadata {
+// 	publishDir params.outdir
 
-	input:
-		tuple val(indiv_id), val(ag_id), path(bed_files)
+// 	input:
+// 		tuple val(indiv_id), val(ag_id), path(bed_files)
 
-	output:
-		path name
+// 	output:
+// 		path name
 
-	script:
-	name = 'metadata.with_intervals.txt'
-	column = bed_files.join('\n')
-	"""
-	echo "filtered_sites_file\n${column}" > columns.txt
-	paste ${params.samples_file} columns.txt > ${name}
-	"""
-}
+// 	script:
+// 	name = 'metadata.with_intervals.txt'
+// 	column = bed_files.join('\n')
+// 	"""
+// 	echo "filtered_sites_file\n${column}" > columns.txt
+// 	paste ${params.samples_file} columns.txt > ${name}
+// 	"""
+// }
 
 workflow filterVariants {
 	take:
 		indiv_cell_types_meta
 	main:
-		filter_variants(indiv_cell_types_meta) | extend_metadata
+		variants_paths = filter_variants(indiv_cell_types_meta)
+		//extend_metadata(variants_paths.map(it -> it[2]).collect())
 	emit:
 		filter_variants.out
-		extend_metadata.out
+		//extend_metadata.out
 }
 
 workflow {
@@ -71,6 +72,6 @@ workflow {
 	INDIV_CELL_TYPE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map{ row -> tuple(row.indiv_id, row.ag_id) }
+		.map{ row -> tuple(row.indiv_id, row.ag_id, row.join('\t')) }
 	filterVariants(INDIV_CELL_TYPE)
 }
