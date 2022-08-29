@@ -13,7 +13,7 @@ process filter_variants {
 		val indiv_id
 
 	output:
-		tuple val(indiv_id), path(outname), path("${outname}.tbi")
+		tuple val(indiv_id), path(outname)//, path("${outname}.tbi")
 
 	script:
 	outname = "${indiv_id}.bed.gz"
@@ -29,18 +29,17 @@ process filter_variants {
 			(\$8=="0/1" || \$8=="1/0" || \$8=="0|1" || \$8=="1|0") && (\$11<min_AD || \$12<min_AD) { \
 				next; \
 			} \
-			{ print; }' > f.bed
-	sort-bed f.bed > sorted.bed
-	head sorted.bed
-	cat sorted.bed | grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
+			{ print; }' \
+	| sort-bed - \
+	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
 	| bgzip -c > ${outname}
 	# Check if file is empty
-	if [[ \$(wc -l <${outname}) -ge 1 ]];
-	then
-		tabix -f -p bed "${outname}"
-	else
-		touch "${outname}.tbi"
-	fi
+	#if [[ \$(wc -l <${outname}) -ge 1 ]];
+	#then
+	#	tabix -f -p bed "${outname}"
+	#else
+	#	touch "${outname}.tbi"
+	#fi
 	"""
 }
 
@@ -69,7 +68,7 @@ workflow filterVariants {
 		variants_paths = filter_variants(indiv_cell_types_meta)
 		//extend_metadata(variants_paths.map(it -> it[2]).collect())
 	emit:
-		filter_variants.out
+		variants_paths
 		//extend_metadata.out
 }
 
