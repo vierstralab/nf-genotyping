@@ -59,6 +59,7 @@ process call_genotypes {
 	tag "${region}"
 	//scratch true
 	conda "${params.conda}"
+	publishDir "${params.outdir}/conda"
 	cpus 2
 
 	input:
