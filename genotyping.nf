@@ -57,9 +57,9 @@ process create_genome_chunks {
 // Call genotypes per region
 process call_genotypes {
 	tag "${region}"
-	//scratch true
+	scratch true
 	conda "${params.conda}"
-	publishDir "${params.outdir}/conda"
+	//publishDir "${params.outdir}/conda"
 	cpus 2
 
 	input:
