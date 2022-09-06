@@ -63,7 +63,7 @@ process call_genotypes {
 	cpus 2
 
 	input:
-		tuple val(region), val(indiv_ids), val(indiv_bams), val(indiv_vcf_indices), val(n_indivs)
+		tuple val(region), val(indiv_ids), val(indiv_bams), val(n_indivs)
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -97,6 +97,10 @@ process call_genotypes {
 		-i"INFO/DP>=${params.min_DP}" \
 		--output-type z - \
 	> ${region}.vcf.gz
+
+	if bcftools view -H ${region.vcf.gz} | head | wc -l; then
+		exit 1
+	fi
 
 	bcftools index ${region}.vcf.gz
 
@@ -218,7 +222,7 @@ workflow genotyping {
 			.flatMap( it ->  it.split() )
 			.combine(all_merged_files).combine(n_indivs)
 		region_genotypes = call_genotypes(genome_chunks)
-		merge_vcfs(region_genotypes.map(it -> it[0]).toList())
+		merge_vcfs(region_genotypes.map(it -> it[0]).collect())
 	emit:
 		merge_vcfs.out
 }
