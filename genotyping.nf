@@ -27,7 +27,7 @@ process merge_bamfiles {
 		bam_ext = file(bam_files).extension
 		name = "${indiv_id}.${bam_ext}"
 		"""
-		ln -sf ${bam_files} ${name}
+		ln -s ${bam_files} ${name}
 		samtools index ${name}
 		"""
 	}
