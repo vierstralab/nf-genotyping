@@ -83,7 +83,7 @@ process call_genotypes {
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth ${n_indivs * 150} --max-idepth 200000 \
+		--max-depth ${n_indivs * 100} \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
@@ -97,10 +97,6 @@ process call_genotypes {
 		-i"INFO/DP>=${params.min_DP}" \
 		--output-type z - \
 	> ${region}.vcf.gz
-
-	if bcftools view -H ${region.vcf.gz} | head | wc -l; then
-		exit 1
-	fi
 
 	bcftools index ${region}.vcf.gz
 
