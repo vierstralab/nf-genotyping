@@ -74,7 +74,7 @@ process call_genotypes {
 	script:
 	indiv_bams_names = indiv_bams.tap { it.name }.findAll { !it.endsWith('ai')}
 	.join('\n')
-	indiv_ids = indiv_bams_names.tap{ it.simpleName }.join('\n')
+	indiv_ids = indiv_bams_names.tap{ it.split('.')[0] }.join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
