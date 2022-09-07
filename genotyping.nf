@@ -58,8 +58,9 @@ process create_genome_chunks {
 process call_genotypes {
 	tag "${region}"
 	scratch true
+	cache true
 	conda "${params.conda}"
-	//publishDir "${params.outdir}/conda"
+	publishDir "${params.outdir}/region_genotypes"
 	cpus 2
 
 	input:
@@ -210,16 +211,16 @@ workflow genotyping {
 	main:
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1].join(' ')))
-		merged_bamfiles = merge_bamfiles(bam_files).map(it -> tuple(it[0], it[1])).toList()
+		merged_bamfiles = merge_bamfiles(bam_files).map(i -> tuple(i[0], i[1])).toList()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
 		all_merged_files = merged_bamfiles.transpose()
-			.map(it -> it.join('\n'))
+			.map(t -> t.join('\n'))
 			.toList()
 		genome_chunks = create_genome_chunks()
-			.flatMap(it -> it.split())
+			.flatMap(n -> n.split())
 		region_genotypes = call_genotypes(genome_chunks, all_merged_files, n_indivs)
-		merge_vcfs(region_genotypes.map(it -> it[0]).collect())
+		merge_vcfs(region_genotypes.map(p -> p[0]).collect())
 	emit:
 		merge_vcfs.out
 }
