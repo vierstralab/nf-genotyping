@@ -72,7 +72,7 @@ process call_genotypes {
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
-	indiv_bams_names = indiv_bams.findAll { it.name =~ /\*am\$/ }
+	indiv_bams_names = indiv_bams.findAll { !(it.name =~ /ai/) }
 	indiv_ids = indiv_bams_names.tap{ it.simpleName }
 	"""
 	# Workaround
