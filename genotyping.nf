@@ -93,7 +93,7 @@ process call_genotypes {
 		--threads ${task.cpus} \
 		--keep-alts \
 		--multiallelic-caller \
-		--format-fields GQ \
+		-a GQ \
 		--output-type v \
 	| bcftools filter \
 		-i"INFO/DP>=${params.min_DP}" \
