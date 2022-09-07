@@ -72,7 +72,7 @@ process call_genotypes {
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
-	indiv_bams_names = indiv_bams.map(bam -> bam.name)
+	indiv_bams_names = indiv_bams.split(' ').map(bam -> bam.name)
 		.filter { !it.endswith('ai') }
 		.join('\n')
 	indiv_ids = indiv_bams_names.map(name -> name.simpleName).join('\n')
