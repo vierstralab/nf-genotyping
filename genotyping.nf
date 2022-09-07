@@ -64,7 +64,7 @@ process call_genotypes {
 
 	input:
 	    each region 
-		tuple val(indiv_ids), val(indiv_bams),
+		tuple val(indiv_ids), val(indiv_bams)
 		val n_indivs
 
 	output:
