@@ -65,20 +65,22 @@ process call_genotypes {
 
 	input:
 	    each region 
-		tuple val(indiv_ids), val(indiv_bams)
+		path indiv_bams
 		val n_indivs
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
+	indiv_bams_names = indiv_bams.map(bam -> bam.name).filter{ !it.endswith('ai') }.join('\n')
+	indiv_ids = indiv_bams_names.map(name -> name.simpleName).join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
 	echo "${indiv_ids}" > samples.txt
-	echo "${indiv_bams}" > filelist.txt
+	echo "${indiv_bams_names}" > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
@@ -211,15 +213,14 @@ workflow genotyping {
 	main:
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1].join(' ')))
-		merged_bamfiles = merge_bamfiles(bam_files).map(i -> tuple(i[0], i[1])).toList()
+		merged_bamfiles = merge_bamfiles(bam_files)
+			.flatMap(i -> tuple(i[1], it[2]))
+			.collect()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
-		all_merged_files = merged_bamfiles.transpose()
-			.map(t -> t.join('\n'))
-			.toList()
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split())
-		region_genotypes = call_genotypes(genome_chunks, all_merged_files, n_indivs)
+		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, n_indivs)
 		merge_vcfs(region_genotypes.map(p -> p[0]).collect())
 	emit:
 		merge_vcfs.out
