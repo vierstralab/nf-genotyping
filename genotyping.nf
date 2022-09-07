@@ -73,7 +73,7 @@ process call_genotypes {
 
 	script:
 	indiv_bams_names = indiv_bams.findAll { !(it.name =~ /ai/) }
-	indiv_ids = indiv_bams_names.map { it.simpleName }
+	indiv_ids = indiv_bams_names.collect { it.simpleName }
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
