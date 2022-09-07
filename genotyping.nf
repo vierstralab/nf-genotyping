@@ -73,16 +73,14 @@ process call_genotypes {
 
 	script:
 	indiv_bams_names = indiv_bams.tap { it.name }
-		.filter { !it.endswith('ai') }
-		.join('\n')
-	indiv_ids = indiv_bams_names.map(name -> name.simpleName).join('\n')
+	indiv_ids = indiv_bams_names.tap{ it.simpleName }
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-	echo "${indiv_ids}" > samples.txt
-	echo "${indiv_bams_names}" > filelist.txt
+	echo "${indiv_ids}" | tr " " "\n" > samples.txt
+	echo "${indiv_bams_names}" | tr " " "\n" > filelist.txt
 
 	bcftools mpileup \
 		--regions ${region} \
