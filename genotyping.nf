@@ -73,7 +73,7 @@ process call_genotypes {
 
 	script:
 	indiv_bams_names = indiv_bams.findAll { !(it.name =~ /ai/) }
-	indiv_ids = indiv_bams_names.tap{ it.simpleName }
+	indiv_ids = indiv_bams_names.map { it.simpleName }
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
@@ -144,16 +144,15 @@ process merge_vcfs {
 	publishDir params.outdir + '/genotypes'
 
 	input:
-		val region_vcfs
+		path region_vcfs
 
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 
 	script:
-	region_vcf_names = region_vcfs.join('\n')
 	"""
 	# Concatenate files
-	echo "${region_vcf_names}" > files.txt
+	echo "${region_vcfs}" | tr " " "\n" > files.txt
 	cat files.txt | sed 's!.*/!!' | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
