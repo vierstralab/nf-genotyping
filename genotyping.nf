@@ -214,7 +214,7 @@ workflow genotyping {
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(i -> tuple(i[1], i[2]))
-			.collect()
+			.collect().first()
 		n_indivs = merged_bamfiles.size()
 		// Workaround. Collect uses flatMap, which won't work here
 		genome_chunks = create_genome_chunks()
