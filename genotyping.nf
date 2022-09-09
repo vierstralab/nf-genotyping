@@ -28,7 +28,7 @@ process merge_bamfiles {
 		name = "${indiv_id}.${bam_ext}"
 		"""
 		ln -s ${bam_files} ${name}
-		samtools index ${name}
+		ln -s ${bam_files}.crai ${name}.crai
 		"""
 	}
 }
