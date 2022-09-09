@@ -88,7 +88,7 @@ process call_genotypes {
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth ${n_indivs / 2 * 20} \
+		--max-depth ${n_indivs * 10} \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
@@ -215,7 +215,7 @@ workflow genotyping {
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(i -> tuple(i[1], i[2]))
 			.collect()
-		n_indivs = merged_bamfiles.size()
+		n_indivs = merged_bamfiles.size() / 2
 		// Workaround. Collect uses flatMap, which won't work here
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split())
