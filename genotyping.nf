@@ -72,6 +72,7 @@ process call_genotypes {
 	script:
 	indiv_bams_names = indiv_bams.findAll { !(it.name =~ /ai/) }
 	indiv_ids = indiv_bams_names.collect { it.simpleName }
+	n_indivs = indiv_ids.size()
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
@@ -212,11 +213,11 @@ workflow genotyping {
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(i -> tuple(i[1], i[2]))
-		n_indivs = merged_bamfiles.size() / 2
-		bamfiles_paths = merge_bamfiles.collectFile(sort: true, newLine: true)
+			.collectFile(sort: true, newLine: true)
+		bamfiles_paths = merge_bamfiles
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split()).take(5)
-		region_genotypes = call_genotypes(genome_chunks, bamfiles_paths, n_indivs)
+		region_genotypes = call_genotypes(genome_chunks, bamfiles_paths)
 		genotypes_paths = region_genotypes.map(p -> p[0])
 			.collectFile(name: 'regions.txt', newLine: true)
 		merge_vcfs(genotypes_paths)
