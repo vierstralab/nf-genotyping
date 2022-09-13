@@ -145,6 +145,7 @@ process merge_vcfs {
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 
 	script:
+	n_indivs = 12
 	"""
 	# Concatenate files
 	echo "${region_vcfs}" | tr " " "\n" > files.txt
@@ -211,12 +212,11 @@ workflow genotyping {
 			.map(it -> it[1])
 			.collectFile(sort: true, newLine: true)
 		merged_bamfiles.view()
-		n_indivs = merged_bamfiles.countLines()
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split()).take(5)
-		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, n_indivs)
+		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles)
 		genotypes_paths = region_genotypes.map(p -> p[0])
-			.collectFile(name: 'regions.txt', newLine: true)
+			.collectFile(newLine: true)
 		merge_vcfs(genotypes_paths)
 	emit:
 		merge_vcfs.out
