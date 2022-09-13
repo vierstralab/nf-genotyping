@@ -212,13 +212,13 @@ workflow genotyping {
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(i -> tuple(i[1], i[2]))
-			.collect()
+			.collectFile(sort: true, newLine: true)
 		n_indivs = merged_bamfiles.size() / 2
-		// Workaround. Collect uses flatMap, which won't work here
 		genome_chunks = create_genome_chunks()
-			.flatMap(n -> n.split())
+			.flatMap(n -> n.split()).take(5)
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, n_indivs)
-		merge_vcfs(region_genotypes.map(p -> p[0]).collectFile(name: 'regions.txt', newLine: true))
+		merge_vcfs(region_genotypes.map(p -> p[0])
+			.collectFile(name: 'regions.txt', newLine: true))
 	emit:
 		merge_vcfs.out
 }
@@ -229,7 +229,7 @@ workflow {
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
-		.groupTuple()
+		.groupTuple().take(5)
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
 }
