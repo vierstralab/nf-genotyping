@@ -215,7 +215,7 @@ workflow genotyping {
 			.toList()
 		merged_bamfiles.view()
 		genome_chunks = create_genome_chunks()
-			.flatMap(n -> n.split()).take(5)
+			.flatMap(n -> n.split())
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
 		genotypes_paths = region_genotypes.map(p -> p[0])
 			.collectFile(newLine: true).toList()
@@ -230,7 +230,7 @@ workflow {
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
-		.groupTuple().take(5)
+		.groupTuple()
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
 }
