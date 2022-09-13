@@ -75,7 +75,7 @@ process call_genotypes {
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
-	echo "${indiv_bam_paths}" > filelist.txt
+	echo "${indiv_bam_paths}" | grep -v "crai" > filelist.txt
 	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
@@ -210,11 +210,11 @@ workflow genotyping {
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(it -> tuple(it[1], it[2]))
-			.collectFile(sort: true, newLine: true).findAll { !(it =~ /ai/) }
+			.collectFile(sort: true, newLine: true)
 			.toList()
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split()).take(5)
-		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size())
+		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
 		genotypes_paths = region_genotypes.map(p -> p[0])
 			.collectFile(newLine: true)
 		merge_vcfs(genotypes_paths)
