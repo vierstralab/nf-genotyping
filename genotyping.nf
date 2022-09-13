@@ -64,7 +64,6 @@ process call_genotypes {
 	input:
 	    each region 
 		path indiv_bams
-		val n_indivs
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
