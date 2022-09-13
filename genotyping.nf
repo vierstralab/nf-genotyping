@@ -63,7 +63,7 @@ process call_genotypes {
 
 	input:
 	    each region 
-		path indiv_bams
+		val indiv_bams
 		val n_indivs
 
 	output:
@@ -74,8 +74,8 @@ process call_genotypes {
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
-
-	cat ${indiv_bams} | xargs -I file basename file | cut -d"." -f1 > samples.txt
+	echo "${indiv_bams}"
+	echo "${indiv_bams}" | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
 		--regions ${region} \
