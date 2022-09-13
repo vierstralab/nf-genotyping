@@ -69,16 +69,12 @@ process call_genotypes {
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
-	indiv_bams_names = indiv_bams.findAll { !(it.name =~ /ai/) }
-	indiv_ids = indiv_bams_names.collect { it.simpleName }
-	n_indivs = indiv_ids.size()
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-	echo "${indiv_ids.join('\n')}" > samples.txt
-	echo "${indiv_bams_names.join('\n')}" > filelist.txt
+	cat ${indiv_bams} | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
 		--regions ${region} \
@@ -88,7 +84,7 @@ process call_genotypes {
 		--gap-frac 0.05 \
 		--max-depth ${n_indivs * 10} \
 		--annotate FORMAT/DP,FORMAT/AD \
-		--bam-list filelist.txt \
+		--bam-list ${indiv_bams} \
 		--output-type u \
 	| bcftools call \
 		--threads ${task.cpus} \
@@ -211,8 +207,8 @@ workflow genotyping {
 		bam_files = samples_aggregations
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
-			.flatMap(i -> tuple(i[1], i[2]))
-			.collectFile(sort: true, newLine: true)
+			.flatMap(i -> it[1])
+			.collectFile(name: 'merged_bam.txt', sort: true, newLine: true)
 		merged_bamfiles.view()
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split()).take(5)
