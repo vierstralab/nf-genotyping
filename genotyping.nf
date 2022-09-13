@@ -140,15 +140,16 @@ process merge_vcfs {
 	publishDir params.outdir + '/genotypes'
 
 	input:
-		path region_vcfs
+		val region_vcfs
 
 	output:
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 
 	script:
+	vsfs = region_vcfs.join('\n')
 	"""
 	# Concatenate files
-	echo "${region_vcfs}" | tr " " "\n" > files.txt
+	echo "${vcfs}" > files.txt
 	cat files.txt | sed 's!.*/!!' | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
@@ -217,7 +218,7 @@ workflow genotyping {
 			.flatMap(n -> n.split()).take(5)
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
 		genotypes_paths = region_genotypes.map(p -> p[0])
-			.collectFile(newLine: true)
+			.collectFile(newLine: true).toList()
 		merge_vcfs(genotypes_paths)
 	emit:
 		merge_vcfs.out
