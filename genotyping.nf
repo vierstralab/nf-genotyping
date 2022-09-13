@@ -210,8 +210,8 @@ workflow genotyping {
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(it -> tuple(it[1], it[2]))
-			.collectFile(sort: true, newLine: true)
-			.toList().findAll { !(it =~ /ai/) }
+			.collectFile(sort: true, newLine: true).findAll { !(it =~ /ai/) }
+			.toList()
 		merged_bamfiles.view()
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split()).take(5)
