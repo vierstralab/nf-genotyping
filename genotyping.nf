@@ -69,6 +69,7 @@ process call_genotypes {
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
+	n_indivs = 12
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
@@ -144,7 +145,6 @@ process merge_vcfs {
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 
 	script:
-	n_indivs = 12
 	"""
 	# Concatenate files
 	echo "${region_vcfs}" | tr " " "\n" > files.txt
