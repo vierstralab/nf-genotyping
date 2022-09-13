@@ -212,6 +212,7 @@ workflow genotyping {
 			.flatMap(it -> tuple(it[1], it[2]))
 			.collectFile(sort: true, newLine: true)
 			.toList()
+		merged_bamfiles.view()
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split()).take(5)
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
