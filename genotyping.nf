@@ -211,14 +211,12 @@ workflow genotyping {
 			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
 			.flatMap(it -> tuple(it[1], it[2]))
-			.collectFile(sort: true, newLine: true)
-			.toList()
-		merged_bamfiles.view()
+			.toSortedList( { a, b -> b[1] <=> a[1] } )
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split())
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
 		genotypes_paths = region_genotypes.map(p -> p[0])
-			.collectFile(newLine: true).toList()
+			.toSortedList( { a, b -> b[1] <=> a[1] } )
 		merge_vcfs(genotypes_paths)
 	emit:
 		merge_vcfs.out
