@@ -213,7 +213,7 @@ workflow genotyping {
 			.flatMap(it -> tuple(it[1], it[2]))
 			.toSortedList( { a, b -> b[1] <=> a[1] } )
 		genome_chunks = create_genome_chunks()
-			.flatMap(n -> n.split())
+			.flatMap(n -> n.split()).take(3)
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
 		genotypes_paths = region_genotypes.map(p -> p[0])
 			.toSortedList( { a, b -> b[1] <=> a[1] } )
@@ -228,7 +228,7 @@ workflow {
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
-		.groupTuple()
+		.groupTuple().take(3)
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
 
 }
