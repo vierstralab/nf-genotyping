@@ -146,7 +146,7 @@ process merge_vcfs {
 		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
 
 	script:
-	vsfs = region_vcfs.join('\n')
+	vcfs = region_vcfs.join('\n')
 	"""
 	# Concatenate files
 	echo "${vcfs}" > files.txt
