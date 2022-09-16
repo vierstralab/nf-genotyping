@@ -22,7 +22,7 @@ process filter_variants {
 		-s ${indiv_id} \
 		-i'GT="alt"' \
 		-f'%CHROM\\t%POS0\\t%POS\\t%ID\\t%REF\\t%ALT\\t%INFO/MAF\\t[%GT\\t%GQ\\t%DP\\t%AD{0}\\t%AD{1}]\\n' \
-		${params.genotype_file} \
+		/net/seq/data2/projects/sabramov/ENCODE4/genotyping_iter2/output/genotypes/all.filtered.snps.annotated.vcf.gz >f.txt \
 	| awk -v OFS="\\t" \
 		-v min_GQ=${params.min_GQ} -v min_AD=${params.min_AD} -v min_DP=${params.min_DP}\
 		'\$9<min_GQ { next; } \$10<min_DP { next; }\
@@ -31,7 +31,7 @@ process filter_variants {
 			} \
 			{ print; }' \
 	| sort-bed - \
-	| grep -vq chrX | grep -vq chrY | grep -vq chrM | grep -vq _random | grep -vq _alt | grep -vq chrUn \
+	| { grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn || true; } \
 	| bgzip -c > ${outname}
 	tabix -f -p bed "${outname}"
 	"""
