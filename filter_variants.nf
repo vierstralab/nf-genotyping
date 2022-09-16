@@ -10,19 +10,19 @@ process filter_variants {
 	publishDir "${params.outdir}/bed_files"
 
 	input:
-		val indiv_id
+		tuple val(indiv_id), val(ag_id)
 
 	output:
 		tuple val(indiv_id), path(outname), path("${outname}.tbi")
 
 	script:
-	outname = "${indiv_id}.bed.gz"
+	outname = "${indiv_id}:${ag_id}.bed.gz"
 	"""
 	bcftools query \
 		-s ${indiv_id} \
 		-i'GT="alt"' \
 		-f'%CHROM\\t%POS0\\t%POS\\t%ID\\t%REF\\t%ALT\\t%INFO/MAF\\t[%GT\\t%GQ\\t%DP\\t%AD{0}\\t%AD{1}]\\n' \
-		/net/seq/data2/projects/sabramov/ENCODE4/genotyping_iter2/output/genotypes/all.filtered.snps.annotated.vcf.gz >f.txt \
+		${params.genotype_file} \
 	| awk -v OFS="\\t" \
 		-v min_GQ=${params.min_GQ} -v min_AD=${params.min_AD} -v min_DP=${params.min_DP}\
 		'\$9<min_GQ { next; } \$10<min_DP { next; }\
@@ -37,33 +37,13 @@ process filter_variants {
 	"""
 }
 
-// process extend_metadata {
-// 	publishDir params.outdir
-
-// 	input:
-// 		tuple val(indiv_id), val(ag_id), path(bed_files)
-
-// 	output:
-// 		path name
-
-// 	script:
-// 	name = 'metadata.with_intervals.txt'
-// 	column = bed_files.join('\n')
-// 	"""
-// 	echo "filtered_sites_file\n${column}" > columns.txt
-// 	paste ${params.samples_file} columns.txt > ${name}
-// 	"""
-// }
-
 workflow filterVariants {
 	take:
 		indiv_cell_types_meta
 	main:
 		variants_paths = filter_variants(indiv_cell_types_meta)
-		//extend_metadata(variants_paths.map(it -> it[2]).collect())
 	emit:
 		variants_paths
-		//extend_metadata.out
 }
 
 workflow {
@@ -71,6 +51,6 @@ workflow {
 	INDIV_CELL_TYPE = Channel
 		.fromPath(params.samples_file)
 		.splitCsv(header:true, sep:'\t')
-		.map(row -> row.indiv_id).distinct()
+		.map(row -> tuple(row.indiv_id, row.ag_id))
 	filterVariants(INDIV_CELL_TYPE)
 }
