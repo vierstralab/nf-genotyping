@@ -10,6 +10,7 @@ process cluster_indivs {
 
     output:
         tuple path('metadata.clustered.tsv'), path('clustering.png')
+        tuple path('snps.clustering.king.id'), path('snps.clustering.king')
     script:
     """
     plink2 --allow-extra-chr \
@@ -26,9 +27,9 @@ process cluster_indivs {
 
 workflow clusterIndivs {
     main:
-        cluster_indivs()
+        updated_meta = cluster_indivs()[0]
     emit:
-        cluster_indivs.out
+        updated_meta
 }
 
 workflow {
