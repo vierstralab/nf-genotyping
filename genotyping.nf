@@ -64,7 +64,6 @@ process call_genotypes {
 	input:
 	    each region 
 		val indiv_bams
-		val n_indivs
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -84,7 +83,7 @@ process call_genotypes {
 		--redo-BAQ \
 		--adjust-MQ 50 \
 		--gap-frac 0.05 \
-		--max-depth ${n_indivs * 10} \
+		--max-depth 10000 \
 		--annotate FORMAT/DP,FORMAT/AD \
 		--bam-list filelist.txt \
 		--output-type u \
@@ -214,7 +213,7 @@ workflow genotyping {
 			.toSortedList( { a, b -> b <=> a } )
 		genome_chunks = create_genome_chunks()
 			.flatMap(n -> n.split())
-		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles, merged_bamfiles.size() / 2)
+		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles)
 		genotypes_paths = region_genotypes.map(p -> p[0])
 			.toSortedList( { a, b -> b <=> a } )
 		merge_vcfs(genotypes_paths)
