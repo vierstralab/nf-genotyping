@@ -6,6 +6,7 @@ params.conda = "$moduleDir/environment.yml"
 process download_encode {
     publishDir "${params.outdir}/${encode_id}"
     conda params.conda
+    maxForks 4
     cpus 2
     scratch true
 
