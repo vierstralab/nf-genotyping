@@ -5,7 +5,7 @@ params.conda = "$moduleDir/environment.yml"
 
 process download_encode {
     conda params.conda
-    maxForks 1
+    maxForks 4
     tag "${encode_id}"
     scratch true
 
