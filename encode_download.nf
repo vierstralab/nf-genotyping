@@ -18,8 +18,8 @@ process download_encode {
     script:
     name = "${encode_id}.bam"
     """
-    wget ${download_path} -o bamfile.bam
-    if [[ `md5sum bamfile.bam | awk '{print \$1}'` != "${md5}" ]]; then
+    wget ${download_path} -o ${name}
+    if [[ `md5sum ${name} | awk '{print \$1}'` != "${md5}" ]]; then
         exit 1
     fi
     """
