@@ -13,7 +13,7 @@ process download_encode {
         tuple val(encode_id), val(download_path), val(md5)
 
     output:
-        tuple val(encode_id), path(name), path("${name}.bai")
+        tuple val(encode_id), path(name)
 
     script:
     name = "${encode_id}.bam"
@@ -22,7 +22,6 @@ process download_encode {
     if [[ `md5sum bamfile.bam | awk '{print \$1}'` != "${md5}" ]]; then
         exit 1
     fi
-    samtools index ${name}
     """
 }
 
@@ -33,7 +32,7 @@ process convert_to_cram {
   conda params.conda
 
   input:
-    tuple val(sample_id), path(bam), path(bam_index)
+    tuple val(sample_id), path(bam)
 
   output:
     tuple val(sample_id), path(cramfile), path("${cramfile}.crai")
@@ -41,6 +40,8 @@ process convert_to_cram {
   script:
   cramfile = bam.baseName + ".cram"
   """
+  samtools index ${bam}
+
   samtools view "${bam}" \
     -C -O cram,version=3.0,level=7,lossy_names=0 \
     -T "${params.genome_fasta_file}" \
