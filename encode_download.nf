@@ -7,6 +7,7 @@ process download_encode {
     publishDir "${params.outdir}/${encode_id}"
     conda params.conda
     maxForks 4
+    tag "${encode_id}"
     cpus 2
     scratch true
 
