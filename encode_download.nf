@@ -4,10 +4,10 @@ nextflow.enable.dsl = 2
 params.conda = "$moduleDir/environment.yml"
 
 process download_encode {
-
-    publishDir "${params.outdir}/clustering"
+    publishDir "${params.outdir}/${encode_id}"
     conda params.conda
     cpus 2
+    scratch true
 
     input:
         tuple val(encode_id), val(download_path), val(md5)
@@ -43,11 +43,12 @@ workflow downloadEncode {
         download_encode.out
 }
 
+params.encode_meta = "/home/sabramov/encode_chipseq.tsv"
 workflow {
     metadata = Channel
-		.fromPath(params.samples_file)
+		.fromPath(params.encode_meta)
 		.splitCsv(header:true, sep:'\t')
-		.map(row -> tuple( row.encode_id, row.file_path ))
+		.map(row -> tuple( row.id, row.link, row.md5 ))
     
     downloadEncode(metadata)
 }
