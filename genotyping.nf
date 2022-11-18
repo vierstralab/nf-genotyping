@@ -36,7 +36,7 @@ process merge_bamfiles {
 // Chunk genome up
 process create_genome_chunks {
 	executor 'local'
-	memory: 500.MB
+	memory 500.MB
 
 	output:
 		stdout
