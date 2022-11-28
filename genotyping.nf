@@ -36,6 +36,8 @@ process merge_bamfiles {
 // Chunk genome up
 process create_genome_chunks {
 	memory 500.MB
+	conda params.conda
+	scratch true
 
 	output:
 		stdout
@@ -50,7 +52,8 @@ process create_genome_chunks {
 				print \$1":"i-step+1"-"i; \
 			} \
 			print \$1":"i-step+1"-"\$2; \
-		}' \
+		}' > genome_chunks.bed
+	bedtools subtract -a genome_chunks.bed -b ${params.encode_blacklist_regions}
 	"""
 } 
 
