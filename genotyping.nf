@@ -51,10 +51,9 @@ process create_genome_chunks {
 			for(i=step; i<=\$2; i+=step) { \
 				print \$1":"i-step+1"-"i; \
 			} \
-			print \$1":"i-step+1"-"\$2; \
+			print \$1"\t"i-step+1"\t"\$2; \
 		}' > genome_chunks.bed
-	head genome_chunks.bed
-	bedtools subtract -a genome_chunks.bed -b ${params.encode_blacklist_regions}
+	bedtools subtract -a genome_chunks.bed -b ${params.encode_blacklist_regions} | awk '{ print \$1:\$2-\$3 }'
 	"""
 } 
 
