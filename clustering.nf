@@ -8,6 +8,8 @@ process cluster_indivs {
     publishDir "${params.outdir}/clustering"
     conda params.conda
 
+    input:
+        path genotype_file
     output:
         tuple path('metadata.clustered.tsv'), path('clustering.png')
         tuple path('snps.clustering.king.id'), path('snps.clustering.king')
@@ -16,7 +18,7 @@ process cluster_indivs {
     plink2 --allow-extra-chr \
     --make-king square \
     --out snps.clustering \
-    --vcf ${params.genotype_file}
+    --vcf ${genotype_file}
 
     python3 $moduleDir/bin/cluster_king.py --matrix snps.clustering.king \
     --matrix-ids snps.clustering.king.id \
@@ -26,12 +28,16 @@ process cluster_indivs {
 }
 
 workflow clusterIndivs {
+    take:
+        genotype_file
     main:
-        updated_meta = cluster_indivs()[0]
+        updated_meta = cluster_indivs(genotype_file)[0]
     emit:
         updated_meta
 }
 
+// Path to resulting genotype file a.k.a the output of genotyping.nf script (all.filtered.snps.annotated.vcf.gz)
+genotype_file = "${launchDir}/${outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
 workflow {
-    clusterIndivs()
+    clusterIndivs(params.genotype_file)
 }
