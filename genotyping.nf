@@ -53,6 +53,7 @@ process create_genome_chunks {
 			} \
 			print \$1":"i-step+1"-"\$2; \
 		}' > genome_chunks.bed
+	head genome_chunks.bed
 	bedtools subtract -a genome_chunks.bed -b ${params.encode_blacklist_regions}
 	"""
 } 
