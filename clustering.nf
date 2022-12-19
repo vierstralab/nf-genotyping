@@ -2,6 +2,8 @@
 nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
+params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
+
 
 process cluster_indivs {
 
@@ -37,7 +39,6 @@ workflow clusterIndivs {
 }
 
 // Path to resulting genotype file a.k.a the output of genotyping.nf script (all.filtered.snps.annotated.vcf.gz)
-genotype_file = "${launchDir}/${outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
 workflow {
     clusterIndivs(params.genotype_file)
 }
