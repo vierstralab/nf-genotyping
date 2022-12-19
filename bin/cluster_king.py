@@ -38,7 +38,7 @@ def main(input_matrix, input_matrix_ids, meta_path, outpath):
     metadata = metadata.merge(clusters, on='indiv_id').sort_values(by='genotype_cluster')
     metadata.rename(columns={'indiv_id': 'old_indiv_id'}, inplace=True)
     metadata.rename(columns={'genotype_cluster': 'indiv_id'}, inplace=True)
-    metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(4)
+    metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(5)
     metadata.to_csv(new_meta_path, header=True, index=False, sep='\t')
     visualizations_path = os.path.join(outpath, 'clustering')
     visualize_clustering(mat, linkage, out_path=visualizations_path)
