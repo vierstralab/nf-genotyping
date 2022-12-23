@@ -8,6 +8,7 @@ process merge_bamfiles {
 
 	conda "${params.conda}"
 	cpus 2
+	memory 32.GB
 
 	input:
 		tuple val(indiv_id), val(bam_files)
