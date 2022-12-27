@@ -4,7 +4,7 @@ nextflow.enable.dsl = 2
 params.conda = "${moduleDir}/environment.yml"
 
 process merge_bamfiles {
-	tag "${indiv_id}"
+	tag "${indiv_id}:${bam_files_names.size()}"
 
 	conda "${params.conda}"
 	cpus 2
@@ -138,7 +138,6 @@ process call_genotypes {
 
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
-	scratch true
 	conda "${params.conda}"
 	publishDir params.outdir + '/genotypes'
 
