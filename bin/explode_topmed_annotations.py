@@ -2,6 +2,9 @@ import sys
 import pandas as pd
 
 def main(snps, annotations, aa_anotation):
+    print(snps.merge(annotations, 
+        on=['chr', 'start', 'end', 'ref'],
+        how='left'))
     merged = snps.merge(annotations, 
         on=['chr', 'start', 'end', 'ref'],
         how='left').merge(aa_anotation,
@@ -19,10 +22,12 @@ def main(snps, annotations, aa_anotation):
 
 
 if __name__ == '__main__':
-    dbsnp_annotation = pd.read_table(sys.argv[1],
-        header=None, names=['chr', 'start', 'end', 'ref', 'alts', 'topmed'])
-    aa_anotation = pd.read_table(sys.argv[2],
+    aa_anotation = pd.read_table(sys.argv[1],
         header=None, names=['chr', 'start', 'end', 'ref', 'alt', 'aa'])
-    snps_to_annotate = pd.read_table(sys.argv[2],
+
+    dbsnp_annotation = pd.read_table(sys.argv[2],
+        header=None, names=['chr', 'start', 'end', 'ref', 'alts', 'topmed'])
+
+    snps_to_annotate = pd.read_table(sys.argv[3],
         header=None, names=['chr', 'start', 'end', 'ref', 'alt'])
     main(snps_to_annotate, dbsnp_annotation, aa_anotation)
