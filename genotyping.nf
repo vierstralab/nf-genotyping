@@ -62,7 +62,6 @@ process create_genome_chunks {
 process call_genotypes {
 	tag "${region}"
 	conda "${params.conda}"
-	publishDir "${params.outdir}/region_genotypes"
 	cpus 2
 
 	input:
