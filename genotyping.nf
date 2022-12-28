@@ -139,16 +139,16 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	conda "${params.conda}"
-	publishDir params.outdir + '/genotypes'
 
 	input:
 		val region_vcfs
 
 	output:
-		tuple path('all.filtered.snps.annotated.vcf.gz'), path('all.filtered.snps.annotated.vcf.gz.csi')
+		tuple path(name), path("${name}.csi")
 
 	script:
 	vcfs = region_vcfs.join('\n')
+	name = "all.filtered.snps.vcf.gz"
 	"""
 	# Concatenate files
 	echo "${vcfs}" > files.txt
@@ -158,7 +158,6 @@ process merge_vcfs {
 		--output-type z \
 		-f mergelist.txt \
 	> all.filtered.vcf.gz
-	
 	bcftools index all.filtered.vcf.gz
 	
 	# Output only SNPs
@@ -166,12 +165,26 @@ process merge_vcfs {
 		-m2 -M2 -v snps \
 		--output-type z \
 		all.filtered.vcf.gz \
-	> all.filtered.snps.vcf.gz
+	> ${name}
 	
-	bcftools index all.filtered.snps.vcf.gz	
+	bcftools index ${name}
+	"""
+}
 
-	# Annotate ancestral allele and topmed frequencies
-	
+
+process annotate_vcf {
+	conda "${params.conda}"
+	publishDir params.outdir + '/genotypes'
+
+	input:
+		tuple path(snps_vcf), path(snps_vcf_index)
+
+	output:
+		tuple path(name), path("${name}.csi")
+
+	script:
+	name = 'all.filtered.snps.annotated.vcf.gz'
+	"""
 	echo '##INFO=<ID=AA,Number=1,Type=String,Description="Inferred ancestral allele -- EPO/PECAN alignments">' > header.txt
 	echo '##INFO=<ID=AAF,Number=1,Type=Float,Description="TOPMED alternative allele frequency">' >> header.txt
 	echo '##INFO=<ID=RAF,Number=1,Type=Float,Description="TOPMED reference allele frequency">' >> header.txt
@@ -191,6 +204,7 @@ process merge_vcfs {
 	bedtools intersect -a ${params.dbsnp_file} -b all.filtered.snps.bed -header \
 		| bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/TOPMED\n" \
 		| bgzip -c > dbsnp_annotations.bed.gz
+
 	# Add TOPMED freqs annotation
 	python3 $moduleDir/bin/explode_topmed_annotations.py \
 		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz | \
@@ -205,9 +219,9 @@ process merge_vcfs {
 		-a all.filtered.snps.annotations.bed.gz \
 		-c CHROM,FROM,TO,REF,ALT,INFO/AAF,INFO/RAF,INFO/AA \
 		all.filtered.snps.vcf.gz \
-	> all.filtered.snps.annotated.vcf.gz
+	> ${name}
 	
-	bcftools index all.filtered.snps.annotated.vcf.gz
+	bcftools index ${name}
 	"""
 }
 
