@@ -220,7 +220,7 @@ process annotate_vcf {
 		--output-type z \
 		-h header.txt \
 		-a all.filtered.snps.annotations.bed.gz \
-		-c CHROM,FROM,TO,REF,ALT,INFO/AAF,INFO/RAF,INFO/AA \
+		-c CHROM,BEG,END,-,ALT,INFO/AAF,INFO/RAF,INFO/AA \
 		${snps_vcf} \
 	> ${name}
 	
@@ -242,9 +242,9 @@ workflow genotyping {
 		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles)
 		genotypes_paths = region_genotypes.map(p -> p[0])
 			.toSortedList( { a, b -> b <=> a } )
-		merge_vcfs(genotypes_paths)
+		out = merge_vcfs(genotypes_paths) | annotate_vcf
 	emit:
-		merge_vcfs.out
+		out
 }
 
 
