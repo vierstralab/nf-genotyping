@@ -8,7 +8,7 @@ def main(snps, annotations, aa_anotation):
     merged = snps.merge(annotations, 
         on=['chr', 'start', 'end', 'ref'],
         how='left').merge(aa_anotation,
-        on=['chr', 'start', 'end', 'ref'], how='left')
+        on=['chr', 'start', 'end', 'ref', 'alt'], how='left')
     merged['aa'].fillna('.', inplace=True)
     merged['raf'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x) or x == '.'
                                            else float(x.split(',')[0]))
