@@ -1,5 +1,9 @@
 import sys
 import pandas as pd
+from tqdm import tqdm
+
+tqdm.pandas()
+
 
 def main(snps, annotations, aa_anotation):
     print(snps.merge(annotations, 
@@ -10,12 +14,14 @@ def main(snps, annotations, aa_anotation):
         how='left').merge(aa_anotation,
         on=['chr', 'start', 'end', 'ref', 'alt'], how='left')
     merged['aa'].fillna('.', inplace=True)
-    merged['raf'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x) or x == '.'
+    print('Calculating RAF')
+    merged['raf'] = merged['topmed'].progress_apply(lambda x: '.' if pd.isna(x) or x == '.'
                                            else float(x.split(',')[0]))
-    merged['aaf'] = merged.apply(
+    print('Calculating AF')
+    merged['aaf'] = merged.progress_apply(
         lambda row:
         '.' if row['raf'] == '.' else
-        dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:]))[row['alt']],
+        dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
         axis=1
     )
     merged[['chr', 'start', 'end', 'ref', 'alt', 'aaf', 'raf', 'aa']].to_csv(sys.stdout, sep='\t', index=False, header=None)
