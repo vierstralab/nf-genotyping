@@ -1,24 +1,16 @@
 import sys
 import pandas as pd
-from tqdm import tqdm
-
-tqdm.pandas()
 
 
 def main(snps, annotations, aa_anotation):
-    print(snps.merge(annotations, 
-        on=['chr', 'start', 'end', 'ref'],
-        how='left'))
     merged = snps.merge(annotations, 
         on=['chr', 'start', 'end', 'ref'],
         how='left').merge(aa_anotation,
         on=['chr', 'start', 'end', 'ref', 'alt'], how='left')
     merged['aa'].fillna('.', inplace=True)
-    print('Calculating RAF')
-    merged['raf'] = merged['topmed'].progress_apply(lambda x: '.' if pd.isna(x) or x == '.'
+    merged['raf'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x) or x == '.'
                                            else float(x.split(',')[0]))
-    print('Calculating AF')
-    merged['aaf'] = merged.progress_apply(
+    merged['aaf'] = merged.apply(
         lambda row:
         '.' if row['raf'] == '.' else
         dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
