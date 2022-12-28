@@ -170,34 +170,40 @@ process merge_vcfs {
 	
 	bcftools index all.filtered.snps.vcf.gz	
 
-	# Annotate ancestral allele
+	# Annotate ancestral allele and topmed frequencies
 	
 	echo '##INFO=<ID=AA,Number=1,Type=String,Description="Inferred ancestral allele -- EPO/PECAN alignments">' > header.txt
-
-	# Contigs with ancestral allele information
-	faidx -i chromsizes ${params.genome_ancestral_fasta_file} | cut -f1 > chroms.txt
+	echo '##INFO=<ID=AAF,Number=1,Type=Float,Description="TOPMED alternative allele frequency">' >> header.txt
+	echo '##INFO=<ID=RAF,Number=1,Type=Float,Description="TOPMED reference allele frequency">' >> header.txt
 	
-	# Get SNPs in BED-format; remove contigs with no FASTA sequence
-	bcftools query  -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" all.filtered.snps.vcf.gz \
-	| grep -w -f chroms.txt \
-	> all.filtered.snps.bed
+	# Get SNPs in BED-format
+	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" \
+		all.filtered.snps.vcf.gz > all.filtered.snps.bed
 
 	# Get ancestral allele from FASTA file and make a TABIX file
 	faidx -i transposed \
 		-b all.filtered.snps.bed \
 		${params.genome_ancestral_fasta_file} \
-	| paste - all.filtered.snps.bed	\
-	| awk -v OFS="\t" '{ print \$5, \$7, \$4; }' \
-	| bgzip -c > all.filtered.snps.ancestral.tab.gz
+		| paste - all.filtered.snps.bed	\
+		| awk -v OFS="\t" '{ print \$5, \$6, \$7, \$8, \$9, \$4; }' \
+		| bgzip -c > ancestral.allele.annotation.bed.gz
+	
+	bedtools intersect -a ${params.dbsnp_file} -b all.filtered.snps.bed -header \
+		| bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/TOPMED\n" \
+		| bgzip -c > dbsnp_annotations.bed.gz
+	# Add TOPMED freqs annotation
+	python3 $moduleDir/bin/explode_topmed_annotations.py \
+		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz | \
+		bgzip -c > all.filtered.snps.annotations.bed.gz
 
-	tabix -b 2 -e -2 all.filtered.snps.ancestral.tab.gz
+	tabix all.filtered.snps.annotations.bed.gz
 
 	# Annotate VCF
 	bcftools annotate \
 		--output-type z \
 		-h header.txt \
-		-a all.filtered.snps.ancestral.tab.gz \
-		-c CHROM,POS,INFO/AA \
+		-a all.filtered.snps.annotations.bed.gz \
+		-c CHROM,FROM,TO,REF,ALT,INFO/AAF,INFO/RAF,INFO/AA \
 		all.filtered.snps.vcf.gz \
 	> all.filtered.snps.annotated.vcf.gz
 	
