@@ -204,8 +204,8 @@ process annotate_vcf {
 		| awk -v OFS="\t" '{ print \$5, \$6, \$7, \$8, \$9, \$4; }' \
 		| bgzip -c > ancestral.allele.annotation.bed.gz
 	
-	bedtools intersect -a ${params.dbsnp_file} -b all.filtered.snps.bed -header \
-		| bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/TOPMED\n" \
+	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/TOPMED\n" ${params.dbsnp_file} | \
+		bedtools intersect -a stdin -b all.filtered.snps.bed -sorted -wa \
 		| bgzip -c > dbsnp_annotations.bed.gz
 
 	# Add TOPMED freqs annotation
