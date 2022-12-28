@@ -1,8 +1,12 @@
 import sys
 import pandas as pd
 
-def main(snps, annotations):
-    merged = snps.merge(annotations, on=['chr', 'start', 'end', 'ref'], how='left')
+def main(snps, annotations, aa_anotation):
+    merged = snps.merge(annotations, 
+        on=['chr', 'start', 'end', 'ref'],
+        how='left').merge(aa_anotation,
+        on=['chr', 'start', 'end', 'ref'], how='left')
+    merged['aa'].fillna('.', inplace=True)
     merged['raf'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x) or x == '.'
                                            else float(x.split(',')[0]))
     merged['aaf'] = merged.apply(
@@ -17,6 +21,8 @@ def main(snps, annotations):
 if __name__ == '__main__':
     dbsnp_annotation = pd.read_table(sys.argv[1],
         header=None, names=['chr', 'start', 'end', 'ref', 'alts', 'topmed'])
-    snps_to_annotate = pd.read_table(sys.argv[2],
+    aa_anotation = pd.read_table(sys.argv[2],
         header=None, names=['chr', 'start', 'end', 'ref', 'alt', 'aa'])
-    main(snps_to_annotate, dbsnp_annotation)
+    snps_to_annotate = pd.read_table(sys.argv[2],
+        header=None, names=['chr', 'start', 'end', 'ref', 'alt'])
+    main(snps_to_annotate, dbsnp_annotation, aa_anotation)
