@@ -254,5 +254,4 @@ workflow {
 		.map(row -> tuple( row.indiv_id, row.bam_file ))
 		.groupTuple()
 	genotyping(SAMPLES_AGGREGATIONS_MERGE)
-
 }
