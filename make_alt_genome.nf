@@ -7,7 +7,7 @@ params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snp
 
 process make_iupac_genome {
 	conda "${params.conda}"
-    tag "${sample_id}"
+    tag "${prefix}"
 	publishDir "${params.outdir}/alt_genome"
 
 	input:
