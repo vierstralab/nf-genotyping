@@ -27,6 +27,6 @@ process make_iupac_genome {
 
 // Make iupac coded genome from genotype_file
 workflow {
-    params.sample_id = "INDIV_00001"
+    params.sample_id = ""
 	make_iupac_genome(params.sample_id)
 }
