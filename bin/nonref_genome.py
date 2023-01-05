@@ -2,8 +2,6 @@
 
 import sys
 import shutil
-
-
 import pyfaidx
 import pysam
 
