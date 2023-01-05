@@ -36,7 +36,7 @@ def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
                 alts = rec.alts
 
                 if sample is not None:
-                    if '/'.join(rec.samples[sample]['GT']) == '.':
+                    if rec.samples[sample]['GT'] is None or '/'.join(rec.samples[sample]['GT']) == '.':
                         continue
                 #if len(ref)>1 or len(alt)>1:
                 #	continue
