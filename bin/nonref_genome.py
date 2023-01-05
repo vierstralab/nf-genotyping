@@ -25,8 +25,7 @@ def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
     with pyfaidx.Fasta(out_fasta_file, mutable=True) as fasta:
         with pysam.VariantFile(vcf_file) as vcf:
             if sample is not None:
-                sample_index = vcf.header.samples.index(sample)
-                if sample_index == -1:
+                if sample not in  vcf.header.samples:
                     raise ValueError('Error: Sample {} was not found in header'.format(sample))
         
             for rec in vcf.fetch():
