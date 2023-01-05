@@ -21,12 +21,12 @@ process make_iupac_genome {
 	name = "${prefix}.iupac.genome.fa"
 	additional_params = sample_id ? "--sample ${sample_id}" : ""
     """
-    python3 $moduleDir/bin/nonref_genome.py ${params.genome_fasta_file} ${name} ${params.genotype_file} ${additional_params}
+    python3 $moduleDir/bin/nonref_genome.py ${params.genome_fasta_file} ${params.genotype_file} ${name} ${additional_params}
     """
 }
 
 // Make iupac coded genome from genotype_file
 workflow {
-    params.sample_id = ""
+    params.sample_id = "INDIV_00001"
 	make_iupac_genome(params.sample_id)
 }

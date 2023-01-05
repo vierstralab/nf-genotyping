@@ -1,10 +1,9 @@
 #!/bin/env python
 
-import sys
 import shutil
 import pyfaidx
 import pysam
-
+import argparse
 
 iupac = "XACMGRSVTWYHKDBN"
 def get_iupac(ref, alts):
@@ -15,34 +14,48 @@ def get_iupac(ref, alts):
 	return iupac[i]
 
 
-orig_fasta_file=sys.argv[1]
-out_fasta_file=sys.argv[2]
-vcf_file=sys.argv[3]
+def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
+    print("Copying original fasta file...")
+
+    shutil.copy2(orig_fasta_file, out_fasta_file)
+    shutil.copy2(orig_fasta_file + ".fai", out_fasta_file + ".fai")
+
+    print('Changing nucleotides to iupac')
+
+    with pyfaidx.Fasta(out_fasta_file, mutable=True) as fasta:
+        with pysam.VariantFile(vcf_file) as vcf:
+            if sample is not None:
+                sample_index = vcf.header.samples.index(sample)
+                if sample_index == -1:
+                    raise ValueError('Error: Sample {} was not found in header'.format(sample))
+        
+            for rec in vcf.fetch():
+                if any([len(i) > 1 for i in rec.alleles]):
+                    continue
+                
+                ref = rec.ref
+                alts = rec.alts
+
+                if sample is not None:
+                    if '/'.join(rec.samples[sample]['GT']) == '.':
+                        continue
+                #if len(ref)>1 or len(alt)>1:
+                #	continue
+
+                ambig = get_iupac(ref, alts)
+                try:
+                    fasta[rec.contig][rec.start] = ambig
+                except KeyError as e:
+                    pass
+
+                    #print fasta[rec.contig][rec.start], ref, alt, ambig
 
 
-print("Copying original fasta file...")
-
-shutil.copy2(orig_fasta_file, out_fasta_file)
-shutil.copy2(orig_fasta_file+".fai", out_fasta_file+".fai")
-
-print('Changing nucleotides to iupac')
-with pyfaidx.Fasta(out_fasta_file, mutable=True) as fasta:
-    with pysam.VariantFile(vcf_file) as vcf:
-        for rec in vcf.fetch():
-            
-            if any([len(i) > 1 for i in rec.alleles]):
-                continue
-            
-            ref = rec.ref
-            alts = rec.alts
-
-            #if len(ref)>1 or len(alt)>1:
-            #	continue
-
-            ambig = get_iupac(ref, alts)
-            try:
-                fasta[rec.contig][rec.start] = ambig
-            except KeyError as e:
-                pass
-
-                #print fasta[rec.contig][rec.start], ref, alt, ambig
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Make alternative genome from VCF file')
+    parser.add_argument('fasta', help='Path to reference fasta file')
+    parser.add_argument('vcf', help='Path to VCF file with variants')
+    parser.add_argument('outpath', help='Path to fasta file with SNPs coded as IUPAC symbols')
+    parser.add_argument('--sample', help='Sample name to extract from VCF file', default=None)
+    args = parser.parse_args()
+    main(args.fasta, args.outpath, args.sample)

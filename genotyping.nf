@@ -170,6 +170,12 @@ process merge_vcfs {
 	"""
 }
 
+// process vcf_stats {
+// 	conda "${params.conda}"
+// 	publishDir params.outdir + '/genotypes'
+
+// }
+
 
 process annotate_vcf {
 	conda "${params.conda}"
