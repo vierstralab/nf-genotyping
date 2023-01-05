@@ -58,4 +58,4 @@ if __name__ == '__main__':
     parser.add_argument('outpath', help='Path to fasta file with SNPs coded as IUPAC symbols')
     parser.add_argument('--sample', help='Sample name to extract from VCF file', default=None)
     args = parser.parse_args()
-    main(args.fasta, args.outpath, args.sample)
+    main(args.fasta, args.vcf, args.outpath, args.sample)
