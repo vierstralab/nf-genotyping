@@ -3,6 +3,13 @@ nextflow.enable.dsl = 2
 
 params.conda = "${moduleDir}/environment.yml"
 
+def set_key_for_group_tuple(ch) {
+  ch.groupTuple()
+  .map{ it -> tuple(groupKey(it[0], it[1].size()), *it[1..(it.size()-1)]) }
+  .transpose()
+}
+
+
 process merge_bamfiles {
 	tag "${indiv_id}:${bam_files_names.size()}"
 
@@ -170,13 +177,6 @@ process merge_vcfs {
 	"""
 }
 
-// process vcf_stats {
-// 	conda "${params.conda}"
-// 	publishDir params.outdir + '/genotypes'
-
-// }
-
-
 process annotate_vcf {
 	conda "${params.conda}"
 	publishDir params.outdir + '/genotypes'
@@ -233,31 +233,51 @@ process annotate_vcf {
 	"""
 }
 
+process vcf_stats {
+	conda "${params.conda}"
+	publishDir "${params.outdir}/stats"
+
+	input:
+		tuple path(vcf), path(vcf_index)
+
+	output:
+		tuple path(name), path("stats/*")
+
+	script:
+	prefix = "stats"
+	name = "bcftools.stats.txt"
+	"""
+	bcftools stats -s - ${vcf} > ${name}
+	plot-vcfstats -p stats ${name}
+	"""
+}
+
 workflow genotyping {
 	take: 
-		samples_aggregations
+		bam_files
 	main:
-		bam_files = samples_aggregations
-			.map(it -> tuple(it[0], it[1].join(' ')))
 		merged_bamfiles = merge_bamfiles(bam_files)
-			.flatMap(it -> tuple(it[1], it[2]))
-			.toSortedList( { a, b -> b <=> a } )
+			| collect(flat: false, sort: true)
 		genome_chunks = create_genome_chunks()
-			.flatMap(n -> n.split())
-		region_genotypes = call_genotypes(genome_chunks, merged_bamfiles)
-		genotypes_paths = region_genotypes.map(p -> p[0])
-			.toSortedList( { a, b -> b <=> a } )
-		out = merge_vcfs(genotypes_paths) | annotate_vcf
+			| flatMap(n -> n.split())
+
+		merged_vcf = call_genotypes(genome_chunks, merged_bamfiles)
+			| map(p -> p[0])
+			| collect(sort: true)
+			| merge_vcfs
+		
+		out = annotate_vcf(merged_vcf)
+		vcf_stats(merged_vcf)
 	emit:
 		out
 }
 
 
 workflow {
-	SAMPLES_AGGREGATIONS_MERGE = Channel
-		.fromPath(params.samples_file)
-		.splitCsv(header:true, sep:'\t')
-		.map(row -> tuple( row.indiv_id, row.bam_file ))
-		.groupTuple()
-	genotyping(SAMPLES_AGGREGATIONS_MERGE)
+	bam_files = Channel.fromPath(params.samples_file)
+		| splitCsv(header:true, sep:'\t')
+		| map(row -> tuple( row.indiv_id, file(row.bam_file) ))
+		| set_key_for_group_tuple
+		| groupTuple()
+	genotyping(bam_files)
 }
