@@ -18,7 +18,7 @@ process merge_bamfiles {
 	memory 32.GB
 
 	input:
-		tuple val(indiv_id), val(bam_files)
+		tuple val(indiv_id), path(bam_files)
 
 	output:
 		tuple val(indiv_id), path(name), path("${name}.*ai")
