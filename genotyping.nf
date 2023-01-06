@@ -11,7 +11,7 @@ def set_key_for_group_tuple(ch) {
 
 
 process merge_bamfiles {
-	tag "${indiv_id}:${bam_files_names.size()}"
+	tag "${indiv_id}:${s}"
 
 	conda "${params.conda}"
 	cpus 2
@@ -25,7 +25,8 @@ process merge_bamfiles {
 
 	script:
 	bam_files_names = bam_files.split(' ')
-	if ( bam_files_names.size() > 1 ) {
+	s = bam_files_names.size()
+	if ( s > 1 ) {
 		name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
