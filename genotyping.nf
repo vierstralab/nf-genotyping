@@ -145,6 +145,7 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	conda "${params.conda}"
+	scratch true
 
 	input:
 		val region_vcfs
@@ -180,6 +181,7 @@ process merge_vcfs {
 process annotate_vcf {
 	conda "${params.conda}"
 	publishDir params.outdir + '/genotypes'
+	scratch true
 
 	input:
 		tuple path(snps_vcf), path(snps_vcf_index)
