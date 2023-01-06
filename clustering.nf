@@ -2,7 +2,7 @@
 nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
-params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
+params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.vcf.gz"
 
 
 process cluster_indivs {
