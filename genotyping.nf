@@ -18,7 +18,7 @@ process merge_bamfiles {
 	memory 32.GB
 
 	input:
-		tuple val(indiv_id), path(bam_files)
+		tuple val(indiv_id), path(bam_files), path(bam_files_index)
 
 	output:
 		tuple val(indiv_id), path(name), path("${name}.*ai")
@@ -36,7 +36,7 @@ process merge_bamfiles {
 		name = "${indiv_id}.${bam_ext}"
 		"""
 		ln -s ${bam_files} ${name}
-		ln -s ${bam_files}.crai ${name}.crai
+		ln -s ${bam_files_index} ${name}.crai
 		"""
 	}
 }
@@ -280,7 +280,7 @@ workflow genotyping {
 workflow {
 	bam_files = Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
-		| map(row -> tuple( row.indiv_id, file(row.bam_file) ))
+		| map(row -> tuple( row.indiv_id, file(row.bam_file), file("${row.bam_file}.*ai") ))
 		| set_key_for_group_tuple
 		| groupTuple()
 	genotyping(bam_files)
