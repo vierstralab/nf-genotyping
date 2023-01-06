@@ -145,6 +145,7 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	conda "${params.conda}"
+	publishDir params.outdir
 	scratch true
 
 	input:
@@ -180,7 +181,7 @@ process merge_vcfs {
 
 process annotate_vcf {
 	conda "${params.conda}"
-	publishDir params.outdir + '/genotypes'
+	publishDir "${params.outdir}"
 	scratch true
 
 	input:
@@ -201,7 +202,7 @@ process annotate_vcf {
 		${snps_vcf} > all.filtered.snps.bed
 
 	# Get ancestral allele from FASTA file and make a TABIX file
-	faidx -i chromsizes ${genome_fasta_ancestral} | cut -f1 > chroms.txt
+	faidx -i chromsizes ${params.genome_ancestral_fasta_file} | cut -f1 > chroms.txt
 
 	cat all.filtered.snps.bed | grep -w -f chroms.txt > ancestral_chrs.snps.bed
 	faidx -i transposed \
