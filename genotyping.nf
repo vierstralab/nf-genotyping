@@ -24,8 +24,7 @@ process merge_bamfiles {
 		tuple val(indiv_id), path(name), path("${name}.*ai")
 
 	script:
-	bam_files_names = bam_files.split(' ')
-	s = bam_files_names.size()
+	s = indiv_id.size()
 	if ( s > 1 ) {
 		name = "${indiv_id}.cram"
 		"""
