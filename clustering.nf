@@ -2,7 +2,7 @@
 nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
-params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.vcf.gz"
+params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
 
 
 process cluster_indivs {
@@ -18,14 +18,14 @@ process cluster_indivs {
     script:
     """
     plink2 --allow-extra-chr \
-    --make-king square \
-    --out snps.clustering \
-    --vcf ${genotype_file}
+        --make-king square \
+        --out snps.clustering \
+        --vcf ${genotype_file}
 
     python3 $moduleDir/bin/cluster_king.py --matrix snps.clustering.king \
-    --matrix-ids snps.clustering.king.id \
-    --meta-file ${params.samples_file} \
-    --outpath ./
+        --matrix-ids snps.clustering.king.id \
+        --meta-file ${params.samples_file} \
+        --outpath ./
     """
 }
 

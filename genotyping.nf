@@ -145,7 +145,7 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	conda "${params.conda}"
-	publishDir params.outdir
+	publishDir "${params.outdir}/genotypes", pattern: "all.filtered.vcf.gz"
 	scratch true
 
 	input:
@@ -153,6 +153,7 @@ process merge_vcfs {
 
 	output:
 		tuple path(name), path("${name}.csi")
+		tuple path("all.filtered.vcf.gz"), path("all.filtered.vcf.gz.csi")
 
 	script:
 	vcfs = region_vcfs.join('\n')
@@ -181,7 +182,7 @@ process merge_vcfs {
 
 process annotate_vcf {
 	conda "${params.conda}"
-	publishDir "${params.outdir}"
+	publishDir "${params.outdir}/genotypes"
 	scratch true
 
 	input:
@@ -269,8 +270,8 @@ workflow genotyping {
 			| collect(sort: true)
 			| merge_vcfs
 		
-		out = annotate_vcf(merged_vcf)
-		vcf_stats(merged_vcf)
+		out = annotate_vcf(merged_vcf[0])
+		vcf_stats(merged_vcf[0])
 	emit:
 		out
 }
