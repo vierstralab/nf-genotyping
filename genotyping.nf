@@ -73,7 +73,7 @@ process call_genotypes {
 
 	input:
 	    each region 
-		path bams_and_index
+		val bams_and_index
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
