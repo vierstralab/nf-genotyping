@@ -260,8 +260,8 @@ workflow genotyping {
 		bam_files
 	main:
 		merged_bamfiles = merge_bamfiles(bam_files)
-			| collect(flat: true, sort: true)
 			| unique()
+			| collect(flat: true, sort: true)
 		genome_chunks = create_genome_chunks()
 			| flatMap(n -> n.split())
 
