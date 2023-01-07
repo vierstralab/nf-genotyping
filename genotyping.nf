@@ -73,18 +73,17 @@ process call_genotypes {
 
 	input:
 	    each region 
-		val indiv_bams
+		tuple path(indiv_bams), path(indiv_bams_index)
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
-	indiv_bam_paths = indiv_bams.join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
-	echo "${indiv_bam_paths}" | grep -v "crai" > filelist.txt
+	echo "${indiv_bams}" | tr " " "\n" > filelist.txt
 	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
