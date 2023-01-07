@@ -239,7 +239,8 @@ process annotate_vcf {
 
 process vcf_stats {
 	conda "${params.conda}"
-	publishDir "${params.outdir}/stats"
+	publishDir "${params.outdir}", pattern: "stats/*"
+	publishDir "${params.outdir}/stats", pattern: "${name}"
 
 	input:
 		tuple path(vcf), path(vcf_index)
