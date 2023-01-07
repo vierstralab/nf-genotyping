@@ -21,7 +21,7 @@ process merge_bamfiles {
 		tuple val(indiv_id), path(bam_files), path(bam_files_index)
 
 	output:
-		tuple val(indiv_id), path(name), path("${name}.*ai")
+		tuple path(name), path("${name}.*ai")
 
 	script:
 	s = indiv_id.size
@@ -73,7 +73,7 @@ process call_genotypes {
 
 	input:
 	    each region 
-		tuple val(indiv_ids), path(indiv_bams), path(indiv_bams_index)
+		path bams_and_index
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -83,7 +83,7 @@ process call_genotypes {
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
-	echo "${indiv_bams}" | tr " " "\n" > filelist.txt
+	echo "${bams_and_index}" | tr " " "\n" | grep -v ".crai" > filelist.txt
 	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
@@ -148,18 +148,17 @@ process merge_vcfs {
 	scratch true
 
 	input:
-		val region_vcfs
+		path region_vcfs
 
 	output:
 		tuple path(name), path("${name}.csi")
 		tuple path("all.filtered.vcf.gz"), path("all.filtered.vcf.gz.csi")
 
 	script:
-	vcfs = region_vcfs.join('\n')
 	name = "all.filtered.snps.vcf.gz"
 	"""
 	# Concatenate files
-	echo "${vcfs}" > files.txt
+	echo "${region_vcfs}" | tr " " "\n" | grep -v ".csi" > files.txt
 	cat files.txt | sed 's!.*/!!' | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
@@ -261,8 +260,7 @@ workflow genotyping {
 		bam_files
 	main:
 		merged_bamfiles = merge_bamfiles(bam_files)
-			| transpose()
-			| collect(flat: false, sort: true)
+			| collect(flat: true, sort: true)
 		genome_chunks = create_genome_chunks()
 			| flatMap(n -> n.split())
 
