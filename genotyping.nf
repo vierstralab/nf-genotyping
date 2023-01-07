@@ -73,7 +73,7 @@ process call_genotypes {
 
 	input:
 	    each region 
-		tuple path(indiv_bams), path(indiv_bams_index)
+		tuple val(indiv_ids), path(indiv_bams), path(indiv_bams_index)
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
