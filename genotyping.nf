@@ -278,7 +278,7 @@ workflow genotyping {
 }
 
 workflow mergeVcfs {
-	vsfs_list = Channel.fromPath('/home/sabramov/vcfs_list.txt')
+	merged_vcf = Channel.fromPath('/home/sabramov/vcfs_list.txt')
 		| splitText()
 		| map(it -> file(it))
 		| collect(sort: true)
