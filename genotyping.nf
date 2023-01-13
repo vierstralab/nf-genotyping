@@ -280,7 +280,7 @@ workflow genotyping {
 workflow mergeVcfs {
 	merged_vcf = Channel.fromPath('/home/sabramov/vcfs_list.txt')
 		| splitText()
-		| map(it -> file(it.substring(0, substring.length() - 1)))
+		| map(it -> file(it.substring(0, it.length() - 1)))
 		| collect(sort: true)
 		| merge_vcfs
 	out = annotate_vcf(merged_vcf[0])
