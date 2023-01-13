@@ -149,7 +149,7 @@ process merge_vcfs {
 	scratch true
 
 	input:
-		path region_vcfs
+		val region_vcfs
 
 	output:
 		tuple path(name), path("${name}.csi")
