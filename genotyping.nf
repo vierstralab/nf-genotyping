@@ -277,6 +277,15 @@ workflow genotyping {
 		out
 }
 
+workflow mergeVcfs {
+	vsfs_list = Channel.fromPath('/home/sabramov/vcfs_list.txt')
+		| splitText()
+		| map(it -> file(it))
+		| collect(sort: true)
+		| merge_vcfs
+	out = annotate_vcf(merged_vcf[0])
+	vcf_stats(merged_vcf[0])
+}
 
 workflow {
 	bam_files = Channel.fromPath(params.samples_file)
