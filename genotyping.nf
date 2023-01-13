@@ -157,9 +157,10 @@ process merge_vcfs {
 
 	script:
 	name = "all.filtered.snps.vcf.gz"
+	region_vcfs_list = region_vcfs.join('\n')
 	"""
 	# Concatenate files
-	echo "${region_vcfs}" | tr " " "\n" | grep -v ".csi" > files.txt
+	echo "${region_vcfs_list}" | grep -v ".csi" > files.txt
 	cat files.txt | sed 's!.*/!!' | tr ":-" "\\t" | tr "." "\\t" | cut -f1-3 | paste - files.txt | sort-bed - | awk '{ print \$NF; }' > mergelist.txt
 
 	bcftools concat \
