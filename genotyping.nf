@@ -145,7 +145,6 @@ process call_genotypes {
 // Merge VCF chunks and add ancestral allele information
 process merge_vcfs {
 	conda "${params.conda}"
-	publishDir "${params.outdir}/genotypes", pattern: "all.filtered.vcf.gz"
 	scratch true
 
 	input:
