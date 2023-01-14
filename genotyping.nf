@@ -268,7 +268,8 @@ workflow genotyping {
 			| flatMap(n -> n.split())
 
 		merged_vcf = call_genotypes(genome_chunks, merged_bamfiles)
-			| collect(flat: true, sort: true)
+			| flatten()
+			| collect(sort: true)
 			| merge_vcfs
 		
 		out = annotate_vcf(merged_vcf[0])
