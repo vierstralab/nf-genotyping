@@ -183,7 +183,6 @@ process merge_vcfs {
 process annotate_vcf {
 	conda "${params.conda}"
 	publishDir "${params.outdir}/genotypes"
-	scratch true
 
 	input:
 		tuple path(snps_vcf), path(snps_vcf_index)
@@ -219,8 +218,9 @@ process annotate_vcf {
 
 	# Add TOPMED freqs annotation
 	python3 $moduleDir/bin/explode_topmed_annotations.py \
-		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz all.filtered.snps.bed  | \
-		bgzip -c > all.filtered.snps.annotations.bed.gz
+		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz all.filtered.snps.bed \
+		| sort-bed - \
+		| bgzip -c > all.filtered.snps.annotations.bed.gz
 
 	tabix all.filtered.snps.annotations.bed.gz
 
