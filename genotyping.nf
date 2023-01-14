@@ -282,7 +282,7 @@ workflow genotyping {
 workflow {
 	bam_files = Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
-		| map(row -> tuple( row.indiv_id, file(row.bam_file), file("${row.bam_file}.crai") ))
+		| map(row -> tuple(row.indiv_id, file(row.bam_file), file("${row.bam_file}.crai")))
 		| set_key_for_group_tuple
 		| groupTuple()
 	genotyping(bam_files)
