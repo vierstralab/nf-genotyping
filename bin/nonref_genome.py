@@ -5,14 +5,34 @@ import pyfaidx
 import pysam
 import argparse
 
-iupac = "XACMGRSVTWYHKDBN"
-def get_iupac(ref, alts):
-	i = iupac.find(ref)
-	for alt in alts:
-		j = iupac.find(alt)
-		i = i | j
-	return iupac[i]
 
+iupac = "XACMGRSVTWYHKDBN"
+def get_iupac(alleles):
+    i = None
+    for allele in alleles:
+        j = iupac.find(allele)
+        if i is None:
+            i = j
+        else:
+            i = i | j
+    return iupac[i]
+
+
+def get_sample_gt(rec, sample):
+    result = set()
+    gt = rec.samples[sample]['GT']
+    if gt is None or gt[0] is None or gt[0] == '.':
+        return result
+    for allele_count in gt:
+        if allele_count == 0:
+            result.add(rec.ref)
+        elif allele_count == 1:
+            assert len(rec.alts) == 1
+            result.add(rec.alts[0])
+        else:
+            raise AssertionError
+    return result
+    
 
 def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
     print("Copying original fasta file...")
@@ -21,33 +41,34 @@ def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
     shutil.copy2(orig_fasta_file + ".fai", out_fasta_file + ".fai")
 
     print('Changing nucleotides to iupac')
-
+    old_key = None
     with pyfaidx.Fasta(out_fasta_file, mutable=True) as fasta:
         with pysam.VariantFile(vcf_file) as vcf:
             if sample is not None:
-                if sample not in  vcf.header.samples:
+                if sample not in vcf.header.samples:
                     raise ValueError('Error: Sample {} was not found in header'.format(sample))
         
             for rec in vcf.fetch():
                 if any([len(i) > 1 for i in rec.alleles]):
                     continue
+
+                key = f'{rec.contig}@{rec.start}'
+                if old_key is None or key != old_key:
+                    alleles = set()
                 
-                ref = rec.ref
-                alts = rec.alts
-
                 if sample is not None:
-                    if rec.samples[sample]['GT'] is None or rec.samples[sample]['GT'][0] is None or '/'.join(map(str, rec.samples[sample]['GT'])) == '.':
-                        continue
-                #if len(ref)>1 or len(alt)>1:
-                #	continue
+                    alleles |= get_sample_gt(rec, sample)
+                else:
+                    for sample in vcf.header.samples:
+                        alleles |= get_sample_gt(rec, sample)
 
-                ambig = get_iupac(ref, alts)
-                try:
-                    fasta[rec.contig][rec.start] = ambig
-                except KeyError as e:
-                    pass
-
-                    #print fasta[rec.contig][rec.start], ref, alt, ambig
+                old_key = key
+                if len(alleles) > 0:
+                    ambig = get_iupac(list(alleles))
+                    try:
+                        fasta[rec.contig][rec.start] = ambig
+                    except KeyError as e:
+                        pass
 
 
 if __name__ == '__main__':
@@ -58,3 +79,4 @@ if __name__ == '__main__':
     parser.add_argument('--sample', help='Sample name to extract from VCF file', default=None)
     args = parser.parse_args()
     main(args.fasta, args.vcf, args.outpath, args.sample)
+ 
