@@ -286,3 +286,10 @@ workflow {
 		| groupTuple()
 	genotyping(bam_files)
 }
+
+workflow annotateVcf {
+	a = Channel.of(
+		tuple('/net/seq/data2/projects/sabramov/ENCODE4/chip-genotypes/output/genotypes/all.filtered.snps.vcf.gz',
+		 '/net/seq/data2/projects/sabramov/ENCODE4/chip-genotypes/output/genotypes/all.filtered.snps.vcf.gz.csi'))
+	annotate_vcf(a)
+}
