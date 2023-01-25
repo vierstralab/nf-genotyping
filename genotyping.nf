@@ -286,3 +286,8 @@ workflow {
 		| groupTuple()
 	genotyping(bam_files)
 }
+
+workflow annotateVCF {
+	vcf = Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
+	annotate_vcf(vcf)
+}
