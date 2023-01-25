@@ -16,7 +16,7 @@ def main(snps, annotations, aa_anotation):
         dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
         axis=1
     )
-    merged[['chr', 'start', 'end', 'ref', 'alt', 'aaf', 'raf', 'aa']].to_csv(sys.stdout, sep='\t', index=False, header=None)
+    merged[['chr', 'start', 'end', 'ref', 'alts', 'aaf', 'raf', 'aa']].to_csv(sys.stdout, sep='\t', index=False, header=None)
 
 
 if __name__ == '__main__':
