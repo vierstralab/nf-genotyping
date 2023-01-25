@@ -29,7 +29,7 @@ def main(snps, annotations, aa_anotation):
         dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
         axis=1
     )
-    return merged[['#chr', 'start', 'end', 'ref', 'alts', 'AAF', 'RAF', 'aa']]
+    return merged[['#chr', 'start', 'end', 'ref', 'alt', 'AAF', 'RAF', 'aa']]
 
 
 if __name__ == '__main__':
