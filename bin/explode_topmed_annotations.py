@@ -16,7 +16,7 @@ def main(snps, annotations, aa_anotation):
         dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
         axis=1
     )
-    merged[['chr', 'start', 'end', 'ref', 'alts', 'aaf', 'raf', 'aa']].to_csv(sys.stdout, sep='\t', index=False, header=None)
+    return merged[['chr', 'start', 'end', 'ref', 'alts', 'aaf', 'raf', 'aa']]
 
 
 if __name__ == '__main__':
@@ -28,4 +28,5 @@ if __name__ == '__main__':
 
     snps_to_annotate = pd.read_table(sys.argv[3],
         header=None, names=['chr', 'start', 'end', 'ref', 'alt'])
-    main(snps_to_annotate, dbsnp_annotation, aa_anotation)
+    df = main(snps_to_annotate, dbsnp_annotation, aa_anotation)
+    df.to_csv(sys.argv[4], sep='\t', index=False, header=None)

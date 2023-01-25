@@ -218,8 +218,8 @@ process annotate_vcf {
 
 	# Add TOPMED freqs annotation
 	python3 $moduleDir/bin/explode_topmed_annotations.py \
-		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz all.filtered.snps.bed \
-		| sort-bed - \
+		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz all.filtered.snps.bed annot.bed
+	sort-bed annot.bed \
 		| bgzip -c > all.filtered.snps.annotations.bed.gz
 
 	tabix all.filtered.snps.annotations.bed.gz
