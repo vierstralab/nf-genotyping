@@ -228,6 +228,7 @@ process annotate_vcf {
 	bcftools annotate \
 		--output-type z \
 		-h header.txt \
+		--pair-logic 
 		-a all.filtered.snps.annotations.bed.gz \
 		-c CHROM,BEG,END,-,ALT,INFO/AAF,INFO/RAF,INFO/AA \
 		${snps_vcf} \
