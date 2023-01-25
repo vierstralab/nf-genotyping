@@ -214,6 +214,7 @@ process annotate_vcf {
 	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/TOPMED\n" ${params.dbsnp_file} \
 		| sort-bed - \
 		| bedtools intersect -a stdin -b all.filtered.snps.bed -sorted -wa \
+		| uniq \
 		| bgzip -c > dbsnp_annotations.bed.gz
 
 	# Add TOPMED freqs annotation
@@ -228,7 +229,7 @@ process annotate_vcf {
 	bcftools annotate \
 		--output-type z \
 		-h header.txt \
-		--pair-logic 
+		--pair-logic exact \
 		-a all.filtered.snps.annotations.bed.gz \
 		-c CHROM,BEG,END,-,ALT,INFO/AAF,INFO/RAF,INFO/AA \
 		${snps_vcf} \

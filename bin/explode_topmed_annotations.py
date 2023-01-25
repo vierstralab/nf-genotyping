@@ -1,22 +1,35 @@
-import sys
 import pandas as pd
+import sys
+
+nucleotides = ('A', 'T', 'G', 'C')
 
 
-def main(snps, annotations, aa_anotation):
+def alt_str_has_single(alts_str):
+    return sum([(len(alt) == 1) and (alt in nucleotides) for alt in alts_str.split(',')]) > 0
+
+
+def main(snps, annotations):   
+    annotations = annotations[(annotations['topmed'] != '.') &
+                           (annotations['topmed'].notna()) &
+                           (annotations['alts'].apply(alt_str_has_single)) &
+                           (annotations['ref'].isin(nucleotides))
+    ]
+
+    assert annotations.value_counts(['#chr', 'start', 'end', 'ref']).max() == 1
+
     merged = snps.merge(annotations, 
-        on=['chr', 'start', 'end', 'ref'],
+        on=['#chr', 'start', 'end', 'ref'],
         how='left').merge(aa_anotation,
         on=['chr', 'start', 'end', 'ref', 'alt'], how='left')
-    merged['aa'].fillna('.', inplace=True)
-    merged['raf'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x) or x == '.'
+    merged['RAF'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x)
                                            else float(x.split(',')[0]))
-    merged['aaf'] = merged.apply(
+    merged['AAF'] = merged.apply(
         lambda row:
-        '.' if row['raf'] == '.' else
+        '.' if row['RAF'] == '.' else
         dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
         axis=1
     )
-    return merged[['chr', 'start', 'end', 'ref', 'alts', 'aaf', 'raf', 'aa']]
+    return merged[['chr', 'start', 'end', 'ref', 'alts', 'AAF', 'RAF', 'aa']]
 
 
 if __name__ == '__main__':
