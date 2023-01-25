@@ -20,7 +20,7 @@ def main(snps, annotations, aa_anotation):
     merged = snps.merge(annotations, 
         on=['#chr', 'start', 'end', 'ref'],
         how='left').merge(aa_anotation,
-        on=['chr', 'start', 'end', 'ref', 'alt'], how='left')
+        on=['#chr', 'start', 'end', 'ref', 'alt'], how='left')
     merged['RAF'] = merged['topmed'].apply(lambda x: '.' if pd.isna(x)
                                            else float(x.split(',')[0]))
     merged['AAF'] = merged.apply(
@@ -29,17 +29,17 @@ def main(snps, annotations, aa_anotation):
         dict(zip(row['alts'].split(','), row['topmed'].split(',')[1:])).get(row['alt'], '.'),
         axis=1
     )
-    return merged[['chr', 'start', 'end', 'ref', 'alts', 'AAF', 'RAF', 'aa']]
+    return merged[['#chr', 'start', 'end', 'ref', 'alts', 'AAF', 'RAF', 'aa']]
 
 
 if __name__ == '__main__':
     aa_anotation = pd.read_table(sys.argv[1],
-        header=None, names=['chr', 'start', 'end', 'ref', 'alt', 'aa'])
+        header=None, names=['#chr', 'start', 'end', 'ref', 'alt', 'aa'])
 
     dbsnp_annotation = pd.read_table(sys.argv[2],
-        header=None, names=['chr', 'start', 'end', 'ref', 'alts', 'topmed'])
+        header=None, names=['#chr', 'start', 'end', 'ref', 'alts', 'topmed'])
 
     snps_to_annotate = pd.read_table(sys.argv[3],
-        header=None, names=['chr', 'start', 'end', 'ref', 'alt'])
+        header=None, names=['#chr', 'start', 'end', 'ref', 'alt'])
     df = main(snps_to_annotate, dbsnp_annotation, aa_anotation)
     df.to_csv(sys.argv[4], sep='\t', index=False, header=None)
