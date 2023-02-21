@@ -40,12 +40,16 @@ process make_dhs_annotation {
     """
 	cat ${params.genotype_annotation} | awk '(\$6 == "${indiv_id}") { print; }' \
 		| bedtools intersect -a ${hotspots_file} -b stdin -wa -wb \
-		| sed -i "s/\$/\t${ag_id}/"> ${name}
+		| sed -i "s/\$/\t${ag_id}/" > sample.intersect.bed
+
+	cat ${params.index_file} | awk -F'\t' -v OFS='\t' '{print \$1,\$2,\$3,\$4 } \
+		| bedtools intersect -a stdin -b sample.intersect.bed -wa -wb > ${name}
     """
 }
 
 workflow annotateDHS {
 	// TODO add a step to the pipeline
+	params.index_file = "/net/seq/data2/projects/ENCODE4Plus/indexes/index_altius_22-11-28/raw_masterlist/masterlist_DHSs_2902Altius-Index_nonovl_any_chunkIDs.bed"
 	params.genotype_annotation = "${launchDir}/${params.outdir}/genotypes/genotypes_by_indiv.bed"
 	Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
