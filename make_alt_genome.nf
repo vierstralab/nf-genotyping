@@ -34,7 +34,7 @@ process make_dhs_annotation {
 		tuple val(indiv_id), val(ag_id), path(hotspots_file)
 
 	output:
-		tuple path("${name}"), path("${name}.fai")
+		path name
 
 	script:
     name = "${ag_id}.dhs_annotation.bed"
