@@ -28,6 +28,7 @@ process make_iupac_genome {
 process make_dhs_annotation {
 	conda "${params.conda}"
     tag "${ag_id}"
+	publishDir "${params.outdir}/dhs_annotations"
 
 	input:
 		tuple val(indiv_id), val(ag_id), path(hotspots_file)
