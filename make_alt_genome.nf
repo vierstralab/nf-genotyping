@@ -39,7 +39,8 @@ process make_dhs_annotation {
     name = "${ag_id}.dhs_annotation.bed"
     """
 	cat ${params.genotype_annotation} | awk '(\$6 == "${indiv_id}") { print; }' \
-		| bedtools intersect -a ${hotspots_file} -b stdin -wa -wb > ${name}
+		| bedtools intersect -a ${hotspots_file} -b stdin -wa -wb \
+		| sed -i "s/\$/\t${ag_id}/"> ${name}
     """
 }
 
