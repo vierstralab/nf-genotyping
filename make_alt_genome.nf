@@ -38,8 +38,9 @@ process make_dhs_annotation {
 	script:
     name = "${ag_id}.dhs_annotation.bed"
     """
-	cat ${params.genotype_annotation} | awk '(\$6 == "${indiv_id}") { print; }' \
-		| bedtools intersect -a ${hotspots_file} -b stdin -wa -wb -sorted \
+	cat ${params.genotype_annotation} | awk -v OFS='\t' '(\$7 == "${indiv_id}") { print; }' > gen_ann.bed
+	unstarch ${hotspots_file} \
+		| bedtools intersect -a stdin -b gen_ann.bed -wa -wb -sorted \
 		| sed -i "s/\$/\t${ag_id}/" > sample.intersect.bed
 
 	cat ${params.index_file} | awk -F'\t' -v OFS='\t' '{print \$1,\$2,\$3,\$4 } \
