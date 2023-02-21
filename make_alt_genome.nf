@@ -50,7 +50,7 @@ process make_dhs_annotation {
 workflow annotateDHS {
 	// TODO add a step to the pipeline
 	params.index_file = "/net/seq/data2/projects/ENCODE4Plus/indexes/index_altius_22-11-28/raw_masterlist/masterlist_DHSs_2902Altius-Index_nonovl_any_chunkIDs.bed"
-	params.genotype_annotation = "${launchDir}/${params.outdir}/genotypes/genotypes_by_indiv.bed"
+	params.genotype_annotation = "${launchDir}/${params.outdir}/genotypes/genotypes_by_indiv_parsed.bed"
 	Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
 		| map(row -> tuple(row.indiv_id, row.ag_id, file(row.hotspots_file)))
