@@ -43,7 +43,7 @@ process make_dhs_annotation {
 		| bedtools intersect -a stdin -b gen_ann.bed -wa -wb -sorted \
 		| sed "s/\$/\t${ag_id}/" > sample.intersect.bed
 
-	cat ${params.index_file} | awk -F'\t' -v OFS='\t' '{print \$1,\$2,\$3,\$4 } \
+	cat ${params.index_file} | awk -F'\t' -v OFS='\t' '{print \$1,\$2,\$3,\$4 }' \
 		| bedtools intersect -a stdin -b sample.intersect.bed -wa -wb -sorted > ${name}
     """
 }
