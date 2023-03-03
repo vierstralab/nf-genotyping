@@ -18,7 +18,7 @@ process merge_bamfiles {
 	memory 32.GB
 
 	input:
-		tuple val(indiv_id), path(bam_files), path(bam_files_index)
+		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
 
 	output:
 		tuple path(name), path("${name}.*ai")
@@ -44,7 +44,7 @@ process merge_bamfiles {
 // Chunk genome up
 process create_genome_chunks {
 	memory 500.MB
-	conda params.conda
+	conda "${params.conda}"
 	scratch true
 
 	output:
