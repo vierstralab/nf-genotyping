@@ -18,10 +18,13 @@ process merge_bamfiles {
 	memory 32.GB
 
 	input:
-		tuple val(indiv_id), val(bam_files)
+// TODO: Check if the following preserves order for bam file and its corresponding index
+//		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
+    tuple val(indiv_id), val(bam_files)
+
 
 	output:
-		tuple path(name), path("${name}.*ai")
+		tuple path(name), path("${name}.crai")
 
 	script:
 	s = indiv_id.size
@@ -43,7 +46,7 @@ process merge_bamfiles {
 // Chunk genome up
 process create_genome_chunks {
 	memory 500.MB
-	conda params.conda
+	conda "${params.conda}"
 	scratch true
 
 	output:
