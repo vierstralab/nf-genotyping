@@ -18,10 +18,13 @@ process merge_bamfiles {
 	memory 32.GB
 
 	input:
-		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
+// TODO: Check if the following preserves order for bam file and its corresponding index
+//		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
+    tuple val(indiv_id), val(bam_files)
+
 
 	output:
-		tuple path(name), path("${name}.*ai")
+		tuple path(name), path("${name}.crai")
 
 	script:
 	s = indiv_id.size
@@ -32,11 +35,10 @@ process merge_bamfiles {
 		samtools index ${name}
 		"""
 	} else {
-		bam_ext = file(bam_files).extension
-		name = "${indiv_id}.${bam_ext}"
+		name = "${indiv_id}.cram"
 		"""
 		ln -s ${bam_files} ${name}
-		ln -s ${bam_files_index} ${name}.crai
+		ln -s ${bam_files}.crai ${name}.crai
 		"""
 	}
 }
@@ -281,12 +283,13 @@ workflow genotyping {
 }
 
 workflow {
-	bam_files = Channel.fromPath(params.samples_file)
+	genotypes = Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
-		| map(row -> tuple(row.indiv_id, file(row.bam_file), file("${row.bam_file}.crai")))
+		| map(row -> tuple(row.indiv_id, row.bam_file))
 		| set_key_for_group_tuple
 		| groupTuple()
-	genotyping(bam_files)
+		| map(it -> tuple(it[0], it[1].join(" ")))
+		| genotyping
 }
 
 workflow annotateVCF {
