@@ -11,10 +11,12 @@ Nextflow pipeline for genotyping from epigenomics data
 ## Pipeline overview
 
 Samples BAM files are merged by corresponding individual and then used for a ``bcftools``-based genotyping pipeline.
+Genetic relatedness calculated using plink2.
 
 ## Usage
 ```
-[jvierstra@dev0 ~]$ nextflow run main.nf -config nextflow.config -profile Altius
+[sabramov@dev0 ~]$ nextflow run genotyping.nf -profile Altius
+[sabramov@dev0 ~]$ nextflow run clustering.nf -profile Altius
 ```
 
 ## Input
@@ -24,13 +26,12 @@ Samples BAM files are merged by corresponding individual and then used for a ``b
 <p>
 A tab-delimited file containing information about each sample. The file must contain a header and the following columns (other columns are permitted and ignored):
 
-- **library_id**: Unique identifier for the each sample/dataset
-- **indiv**: Individual identifier for each sample; many samples can refer to one individual
-- **bamfile**: Absolute path the BAM-formated file
+- **indiv_id**: Individual identifier for each sample; many samples can refer to one individual
+- **bam_file**: Absolute path the BAM-formated file
 </p>
 </details>
 
-<details><summary>Genome reference [--genome]</summary>
+<details><summary>Genome reference [--genome_fasta_file]</summary>
 <p></p>
 <p></p>
 </details>
@@ -41,6 +42,11 @@ A tab-delimited file containing information about each sample. The file must con
 </details>
 
 <details><summary>Ancestral genome [--genome_ancestral_fasta_file]</summary>
+<p></p>
+<p></p>
+</details>
+
+<details><summary>Encode blacklisted regions [--encode_blacklist_regions]</summary>
 <p></p>
 <p></p>
 </details>
@@ -66,12 +72,17 @@ A tab-delimited file containing information about each sample. The file must con
 <p>Minimum sequencing depth per individual to call heterozygous sites.</p>
 </details>
 
+<details><summary>Per-allele depth [--min_AD 4]</summary>
+<p></p>
+<p>Minimum sequencing depth at each allele per individual to call heterozygous sites.</p>
+</details>
+
 <details><summary>Hardy-Weinberg equilbrium [--hwe_cutoff 0.01]</summary>
 <p></p>
 <p>Filter variants that are out of Hardy-Weinberg equilibrium (p-value threshold)</p>
 </details>
 
-<details><summary>Output directory [--outdir .]</summary>
+<details><summary>Output directory [--outdir output]</summary>
 <p></p>
 <p>Specify output direectory</p>
 </details>
@@ -85,4 +96,5 @@ The pipeline outputs a single VCF-formated file containing the called and filter
 - **INFO/CAF:** 1000 genomes project allele frequency (from dbSNP annotation file)
 - **INFO/TOPMED:** TOPMED project allele frequency (from dbSNP annotation file)
 - **INFO/AA:** Inferred ancenstral allele from EPO/PECAN alignments (see "Input" for information about how this is obtained)
+
 
