@@ -200,12 +200,12 @@ process annotate_vcf {
 	
 	# Get SNPs in BED-format
 	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" \
-		${snps_vcf} > all.filtered.snps.bed
+		${snps_vcf} | sort-bed - > all.filtered.snps.bed
 
 	# Get ancestral allele from FASTA file and make a TABIX file
 	faidx -i chromsizes ${params.genome_ancestral_fasta_file} | cut -f1 > chroms.txt
 
-	cat all.filtered.snps.bed | grep -w -f chroms.txt > ancestral_chrs.snps.bed
+	cat all.filtered.snps.bed | grep -w -f chroms.txt | sort-bed - > ancestral_chrs.snps.bed
 	faidx -i transposed \
 		-b ancestral_chrs.snps.bed \
 		${params.genome_ancestral_fasta_file} \
