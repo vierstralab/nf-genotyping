@@ -27,24 +27,18 @@ process merge_bamfiles {
 
 	script:
 	s = indiv_id.size
+	name = "${indiv_id}.merged.cram"
 	if ( s > 1 ) {
-		name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
 		samtools index ${name}
 		"""
 	} else {
-		name = "${indiv_id}.cram"
-		if ( bam_files == name) {
-			"""
-			ln -s ${bam_files} ${name}
-			ln -s ${bam_files}.crai ${name}.crai
-			"""
-		} else {
-			"""
-			"""
-		}
-
+		
+		"""
+		ln -s ${bam_files} ${name}
+		ln -s ${bam_files}.crai ${name}.crai
+		"""
 	}
 }
 
