@@ -20,8 +20,7 @@ process merge_bamfiles {
 	input:
 // TODO: Check if the following preserves order for bam file and its corresponding index
 //		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
-    tuple val(indiv_id), val(bam_files)
-
+    	tuple val(indiv_id), val(bam_files)
 
 	output:
 		tuple path(name), path("${name}.crai")
@@ -36,10 +35,16 @@ process merge_bamfiles {
 		"""
 	} else {
 		name = "${indiv_id}.cram"
-		"""
-		ln -s ${bam_files} ${name}
-		ln -s ${bam_files}.crai ${name}.crai
-		"""
+		if ( bam_files == name) {
+			"""
+			ln -s ${bam_files} ${name}
+			ln -s ${bam_files}.crai ${name}.crai
+			"""
+		} else {
+			"""
+			"""
+		}
+
 	}
 }
 
