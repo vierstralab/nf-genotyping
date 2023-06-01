@@ -2,29 +2,36 @@
 nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
-params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
 
 
 process cluster_indivs {
 
     publishDir "${params.outdir}/clustering"
     conda params.conda
+    scratch true
 
     input:
         path genotype_file
+        path bcftools_stats
+
     output:
-        tuple path('metadata.clustered.tsv'), path('clustering.png')
+        path('metadata.clustered.tsv')
         tuple path('snps.clustering.king.id'), path('snps.clustering.king')
+        path('clustering.png')
     script:
     """
+    grep "PSC" ${bcftools_stats} | tail -n+2 > stats.txt
+
     plink2 --allow-extra-chr \
         --make-king square \
         --out snps.clustering \
         --vcf ${genotype_file}
 
-    python3 $moduleDir/bin/cluster_king.py --matrix snps.clustering.king \
-        --matrix-ids snps.clustering.king.id \
-        --meta-file ${params.samples_file} \
+    python3 $moduleDir/bin/cluster_king.py \
+        snps.clustering \
+        ${params.samples_file} \
+        stats.txt \
+        --min-hets ${params.min_hets}
         --outpath ./
     """
 }
@@ -32,13 +39,16 @@ process cluster_indivs {
 workflow clusterIndivs {
     take:
         genotype_file
+        bcftools_stats
     main:
-        updated_meta = cluster_indivs(genotype_file)[0]
+        updated_meta = cluster_indivs(genotype_file, bcftools_stats)[0]
     emit:
         updated_meta
 }
 
-// Path to resulting genotype file a.k.a the output of genotyping.nf script (all.filtered.snps.annotated.vcf.gz)
+// Path to resulting genotype and bcftools stats files a.k.a the output of genotyping.nf script (all.filtered.snps.annotated.vcf.gz)
 workflow {
-    clusterIndivs(params.genotype_file)
+    params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
+    params.bcftools_stats = "${launchDir}/${params.outdir}/stats/bcftools.stats.txt"
+    clusterIndivs(params.genotype_file, params.bcftools_stats)
 }
