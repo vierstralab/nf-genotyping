@@ -1,5 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
+include { get_container } from "./clustering.nf"
 
 params.conda = "${moduleDir}/environment.yml"
 
@@ -20,22 +21,21 @@ process merge_bamfiles {
 	input:
 // TODO: Check if the following preserves order for bam file and its corresponding index
 //		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
-    tuple val(indiv_id), val(bam_files)
-
+    	tuple val(indiv_id), val(bam_files)
 
 	output:
 		tuple path(name), path("${name}.crai")
 
 	script:
 	s = indiv_id.size
+	name = "${indiv_id}.merged.cram"
 	if ( s > 1 ) {
-		name = "${indiv_id}.cram"
 		"""
 		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
 		samtools index ${name}
 		"""
 	} else {
-		name = "${indiv_id}.cram"
+		
 		"""
 		ln -s ${bam_files} ${name}
 		ln -s ${bam_files}.crai ${name}.crai
@@ -286,6 +286,7 @@ workflow {
 	genotypes = Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
 		| map(row -> tuple(row.indiv_id, row.bam_file))
+		| filter { it[1] }
 		| set_key_for_group_tuple
 		| groupTuple()
 		| map(it -> tuple(it[0], it[1].join(" ")))
