@@ -70,10 +70,10 @@ def read_plink(plink_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Count tags by allele")
     parser.add_argument('plink', type=str, help="Path to plink2 --king result files without (.king/.king.id) suffix")
-    parser.add_argument('meta-file', type=str, 
-						help="Path to meta file")
+    parser.add_argument('metadata', type=str, 
+						help="Path to metadata file")
     
-    parser.add_argument('bcftools-psc', type=str, help='Path to bcftools PSC stats file')
+    parser.add_argument('stats', type=str, help='Path to bcftools PSC stats file')
 
     parser.add_argument('--outpath', type=str, 
 						help="Path to directory to save updated metafile and visualizations", default='./')
@@ -84,8 +84,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     matrix = read_plink(args.plink)
-    stats = read_genotype_stats(args.bcftools_psc)
-    metadata = pd.read_table(args.meta_file, 
+    stats = read_genotype_stats(args.stats)
+    metadata = pd.read_table(args.metadata, 
         dtype={'indiv_id': str}).join(stats)
     main(matrix, metadata, args.outpath, min_hets=args.min_hets)
     
