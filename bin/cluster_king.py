@@ -78,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--outpath', type=str, 
 						help="Path to directory to save updated metafile and visualizations", default='./')
     
-    parser.add_argument('--min-hets', type=str, 
+    parser.add_argument('--min-hets',
 						help="Minimal number of heterozygotes per sample to cluster", type=int, default=100)
     
 
