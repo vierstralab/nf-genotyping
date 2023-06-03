@@ -31,7 +31,7 @@ process cluster_indivs {
         snps.clustering \
         ${params.samples_file} \
         stats.txt \
-        --min-hets ${params.min_hets}
+        --min-hets ${params.min_hets} \
         --outpath ./
     """
 }
