@@ -35,7 +35,6 @@ def main(mat, genotyping_meta, outdir, min_hets=100):
     genotyping_meta = genotyping_meta.merge(clusters,
         on='indiv_id', how='outer').sort_values(by='genotype_cluster')
     genotyping_meta.rename(columns={'indiv_id': 'old_indiv_id', 'new_id': 'indiv_id'}, inplace=True)
-    genotyping_meta['indiv_id'] = 'INDIV_' + genotyping_meta['indiv_id'].astype(str).str.zfill(5)
     genotyping_meta.drop(columns=['genotype_cluster'], inplace=True)
     
     genotyping_meta.to_csv(
