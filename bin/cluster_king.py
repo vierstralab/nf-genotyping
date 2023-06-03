@@ -29,7 +29,7 @@ def main(mat, genotyping_meta, outdir, min_hets=100):
     cl = hierarchy.fcluster(linkage, 0.1, criterion='distance')
     clusters = pd.DataFrame({'indiv_id': mat.index, 'genotype_cluster': cl}).sort_values(
         by='genotype_cluster')
-    clusters['new_id'] = 'INDIV_' + genotyping_meta['genotype_cluster'].astype(str).str.zfill(5)
+    clusters['new_id'] = 'INDIV_' + clusters['genotype_cluster'].astype(str).str.zfill(5)
 
     
     genotyping_meta = genotyping_meta.merge(clusters,
