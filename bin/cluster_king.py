@@ -29,17 +29,16 @@ def main(mat, genotyping_meta, outdir, min_hets=100):
     cl = hierarchy.fcluster(linkage, 0.1, criterion='distance')
     clusters = pd.DataFrame({'indiv_id': mat.index, 'genotype_cluster': cl}).sort_values(
         by='genotype_cluster')
-    clusters['new_id'] = 'INDIV_' + metadata['genotype_cluster'].astype(str).str.zfill(5)
+    clusters['new_id'] = 'INDIV_' + genotyping_meta['genotype_cluster'].astype(str).str.zfill(5)
 
     
-    metadata = metadata.merge(clusters,
+    genotyping_meta = genotyping_meta.merge(clusters,
         on='indiv_id', how='outer').sort_values(by='genotype_cluster')
-    metadata.rename(columns={'indiv_id': 'old_indiv_id'}, inplace=True)
-    metadata.rename(columns={'new_id': 'indiv_id'}, inplace=True)
-    metadata['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(5)
-    metadata.drop(columns=['genotype_cluster'], inplace=True)
+    genotyping_meta.rename(columns={'indiv_id': 'old_indiv_id', 'new_id': 'indiv_id'}, inplace=True)
+    genotyping_meta['indiv_id'] = 'INDIV_' + metadata['indiv_id'].astype(str).str.zfill(5)
+    genotyping_meta.drop(columns=['genotype_cluster'], inplace=True)
     
-    metadata.to_csv(
+    genotyping_meta.to_csv(
         os.path.join(outdir, "metadata.clustered.tsv"),
         index=False, sep='\t'
     )
