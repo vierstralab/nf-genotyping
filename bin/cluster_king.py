@@ -55,7 +55,6 @@ def read_genotype_stats(bcftools_stats):
     stats = stats.iloc[:,2:]
     stats.columns = stats.columns.str.replace(r"(\[.*\])","")
     stats.rename(columns={'sample': 'indiv_id'}, inplace=True)
-    stats.set_index('indiv_id', inplace=True)
     return stats
 
 
@@ -86,7 +85,7 @@ if __name__ == '__main__':
     matrix = read_plink(args.plink)
     stats = read_genotype_stats(args.stats)
     metadata = pd.read_table(args.metadata, 
-        dtype={'indiv_id': str}).join(stats)
+        dtype={'indiv_id': str}).merge(stats, left_on='ag_id', right_on='indiv_id')
     print(stats)
     print(metadata)
     main(matrix, metadata, args.outpath, min_hets=args.min_hets)
