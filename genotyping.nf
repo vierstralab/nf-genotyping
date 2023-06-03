@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
-include { get_container } from "./clustering.nf"
 
 params.conda = "${moduleDir}/environment.yml"
 
