@@ -285,7 +285,7 @@ workflow {
 	genotypes = Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
 		| map(row -> tuple(row.indiv_id, row.bam_file))
-		| filter { it[0].length > 0 }
+		| filter { it[0].isEmpty() }
 		| set_key_for_group_tuple
 		| groupTuple()
 		| map(it -> tuple(it[0], it[1].join(" ")))
