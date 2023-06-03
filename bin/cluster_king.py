@@ -87,5 +87,7 @@ if __name__ == '__main__':
     stats = read_genotype_stats(args.stats)
     metadata = pd.read_table(args.metadata, 
         dtype={'indiv_id': str}).join(stats)
+    print(stats)
+    print(metadata)
     main(matrix, metadata, args.outpath, min_hets=args.min_hets)
     
