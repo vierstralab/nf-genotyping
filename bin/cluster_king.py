@@ -83,7 +83,10 @@ if __name__ == '__main__':
     matrix = read_plink(args.plink)
     stats = read_genotype_stats(args.stats)
     metadata = pd.read_table(args.metadata, 
-        dtype={'indiv_id': str}).merge(stats, on='indiv_id').set_index('indiv_id')
+        dtype={'indiv_id': str}).merge(
+            stats,
+            suffixes=('_old', ''),
+            on='indiv_id').set_index('indiv_id')
     
     main(matrix, metadata, args.outpath, min_hets=args.min_hets)
     
