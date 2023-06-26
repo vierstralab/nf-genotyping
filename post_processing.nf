@@ -37,7 +37,8 @@ process ld_scores {
 	
 	script:
 	"""
-	bcftools view -r ${chromosome} --write-index ${params.genotype_file} -O z > ${chromosome}.vcf.gz
+	bcftools view -r ${chromosome} ${params.genotype_file} -O z > ${chromosome}.vcf.gz
+	bcftools index ${chromosome}.vcf.gz
 	vcftools --geno-r2 \
 		--vcf ${chromosome}.vcf.gz \
 		--minDP ${params.min_DP} \
