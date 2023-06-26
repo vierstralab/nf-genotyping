@@ -26,6 +26,8 @@ process make_iupac_genome {
 process ld_scores {
 	
 	conda params.conda
+	publishDir "${params.outdir}/ld_scores"
+	tag "${chromosome}"
 
 	input:
 		val chromsome
