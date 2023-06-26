@@ -23,6 +23,23 @@ process make_iupac_genome {
     """
 }
 
+process split_by_chromosome {
+	conda params.conda
+	
+	input:
+		val chromosome
+	
+	output:
+		tuple val(chromosome), path(name), path("${name}.csi")
+
+	script:
+	name = "${chromosome}.vcf.gz"
+	"""
+	bcftools view -r ${chromosome} ${params.genotype_file} -O z > ${chromosome}.vcf.gz
+	bcftools index ${chromosome}.vcf.gz
+	"""
+}
+
 process ld_scores {
 	
 	conda params.conda
@@ -30,17 +47,15 @@ process ld_scores {
 	tag "${chromosome}"
 
 	input:
-		val chromosome
+		tuple val(chromosome), path(vcf), path(vcf_index)
 	
 	output:
 		path("${chromosome}.geno.ld")
 	
 	script:
 	"""
-	bcftools view -r ${chromosome} ${params.genotype_file} -O z > ${chromosome}.vcf.gz
-	bcftools index ${chromosome}.vcf.gz
 	vcftools --geno-r2 \
-		--vcf ${chromosome}.vcf.gz \
+		--gzvcf ${vcf} \
 		--minDP ${params.min_DP} \
 		--out ${chromosome}
 	"""
@@ -49,6 +64,7 @@ process ld_scores {
 workflow ldScores {
 	Channel.of(1..22)
 		| map(it -> "chr${it}")
+		| split_by_chromosome
 		| ld_scores
 		| collectFile(name: "ld_scores.geno.ld", storeDir: "$launchDir/${params.outdir}")
 }
