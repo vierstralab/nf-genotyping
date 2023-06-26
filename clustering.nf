@@ -48,7 +48,6 @@ workflow clusterIndivs {
 
 // Path to resulting genotype and bcftools stats files a.k.a the output of genotyping.nf script (all.filtered.snps.annotated.vcf.gz)
 workflow {
-    params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
-    params.bcftools_stats = "${launchDir}/${params.outdir}/stats/bcftools.stats.txt"
+
     clusterIndivs(params.genotype_file, params.bcftools_stats)
 }

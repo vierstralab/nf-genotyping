@@ -1,9 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-params.conda = "${moduleDir}/environment.yml"
-params.genotype_file = "${launchDir}/${params.outdir}/genotypes/all.filtered.snps.annotated.vcf.gz"
-
+params.conda = "$moduleDir/environment.yml"
 
 process make_iupac_genome {
 	conda "${params.conda}"
@@ -25,6 +23,41 @@ process make_iupac_genome {
     """
 }
 
+process ld_scores {
+	
+	conda params.conda
+
+	input:
+		val chromsome
+	
+	output:
+		path("${chromosome}.geno.ld")
+	
+	script:
+	"""
+	bcftools view -r ${chromosome} --write-index ${params.genotype_file} -O z > ${chromosome}.vcf.gz
+	vcftools --geno-r2 \
+		--vcf ${chromosome}.vcf.gz \
+		--minDP ${min_DP} \
+		--out ${chromosome}
+	"""
+}
+
+workflow ldScores {
+	Channel.of(1..22)
+		| ld_scores
+		| collectFile(name: "ld_scores.geno.ld", storeDir: "$launchDir/${params.outdir}")
+}
+
+// Make iupac coded genome from genotype_file
+workflow {
+    params.sample_id = "" // leave empty to include all samples
+	make_iupac_genome(params.sample_id)
+}
+
+
+
+// DEFUNC
 process make_dhs_annotation {
 	conda "${params.conda}"
     tag "${ag_id}"
@@ -59,10 +92,4 @@ workflow annotateDHS {
 		| make_dhs_annotation
 		| collectFile(storeDir: "${params.outdir}",
 			name: "genotypes_annotation.bed")
-
-}
-// Make iupac coded genome from genotype_file
-workflow {
-    params.sample_id = ""
-	make_iupac_genome(params.sample_id)
 }
