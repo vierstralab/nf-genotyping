@@ -30,7 +30,7 @@ process ld_scores {
 	tag "${chromosome}"
 
 	input:
-		val chromsome
+		val chromosome
 	
 	output:
 		path("${chromosome}.geno.ld")
