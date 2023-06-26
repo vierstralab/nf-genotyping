@@ -47,6 +47,7 @@ process ld_scores {
 
 workflow ldScores {
 	Channel.of(1..22)
+		| map(it -> "chr${it}")
 		| ld_scores
 		| collectFile(name: "ld_scores.geno.ld", storeDir: "$launchDir/${params.outdir}")
 }
