@@ -40,7 +40,7 @@ process ld_scores {
 	bcftools view -r ${chromosome} --write-index ${params.genotype_file} -O z > ${chromosome}.vcf.gz
 	vcftools --geno-r2 \
 		--vcf ${chromosome}.vcf.gz \
-		--minDP ${min_DP} \
+		--minDP ${params.min_DP} \
 		--out ${chromosome}
 	"""
 }
