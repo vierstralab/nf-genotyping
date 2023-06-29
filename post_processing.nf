@@ -23,55 +23,6 @@ process make_iupac_genome {
     """
 }
 
-process split_by_chromosome {
-	conda params.conda
-	
-	input:
-		val chromosome
-	
-	output:
-		tuple val(chromosome), path(name), path("${name}.csi")
-
-	script:
-	name = "${chromosome}.vcf.gz"
-	"""
-	bcftools view -r ${chromosome} ${params.genotype_file} -O z > ${chromosome}.vcf.gz
-	bcftools index ${chromosome}.vcf.gz
-	"""
-}
-
-process ld_scores {
-	
-	conda params.conda
-	publishDir "${params.outdir}/ld_scores"
-	tag "${chromosome}"
-
-	input:
-		tuple val(chromosome), path(vcf), path(vcf_index)
-	
-	output:
-		path("${chromosome}.geno.ld")
-	
-	script:
-	"""
-	vcftools --geno-r2 \
-		--gzvcf ${vcf} \
-		--minDP ${params.min_DP} \
-		--maf 0.1 \
-		--ld-window-bp 500000 \
-		--chr ${chromosome} \
-		--out ${chromosome}
-	"""
-}
-
-workflow ldScores {
-	Channel.of(1..22)
-		| map(it -> "chr${it}")
-		| split_by_chromosome
-		| ld_scores
-		| collectFile(name: "ld_scores.geno.ld", storeDir: "$launchDir/${params.outdir}")
-}
-
 // Make iupac coded genome from genotype_file
 workflow {
     params.sample_id = "" // leave empty to include all samples
