@@ -57,8 +57,7 @@ process ld_scores {
 	vcftools --geno-r2 \
 		--gzvcf ${vcf} \
 		--minDP ${params.min_DP} \
-		--maf 0.1 \
-		--ld-window-bp 500000 \
+		--ld-window 1 \
 		--chr ${chromosome} \
 		--out ${chromosome}
 	"""
