@@ -260,6 +260,26 @@ process vcf_stats {
 	"""
 }
 
+process convert_to_bed {
+    conda params.conda
+    publishDir params.outdir
+
+	input:
+		tuple path(vcf), path(vcf_index)
+
+    output:
+        path name
+
+    script:
+    name = "all.genotyped.bed.gz"
+    """
+    echo "#chr\tstart\tend\tRAF\tAAF" > tmp.bed
+    bcftools query -f '%CHROM\t%END0\t%END\t%INFO/RAF\t%INFO/AAF\n' \
+        ${vcf} >> tmp.bed
+	bgzip -c tmp.bed > ${name}
+    """
+}
+
 workflow genotyping {
 	take: 
 		bam_files
@@ -275,10 +295,10 @@ workflow genotyping {
 			| collect(sort: true)
 			| merge_vcfs
 		
-		out = annotate_vcf(merged_vcf[0])
-		vcf_stats(merged_vcf[0])
+		merged_vcf[0] 
+			| (annotate_vcf & vcf_stats & convert_to_bed)
 	emit:
-		out
+		annotate_vcf.out
 }
 
 workflow {
@@ -293,6 +313,11 @@ workflow {
 }
 
 workflow annotateVCF {
-	vcf = Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
-	annotate_vcf(vcf)
+	Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
+		| annotate_vcf
+}
+
+workflow tmp {
+	Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
+	 	| convert_to_bed
 }
