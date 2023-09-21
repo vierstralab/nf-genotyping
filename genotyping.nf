@@ -23,21 +23,35 @@ process merge_bamfiles {
     	tuple val(indiv_id), val(bam_files)
 
 	output:
-		tuple path(name), path("${name}.crai")
+		tuple path("${name}.*am"), path("${name}.*ai")
 
 	script:
 	s = indiv_id.size
-	name = "${indiv_id}.merged.cram"
+	name = "${indiv_id}.merged"
 	if ( s > 1 ) {
 		"""
-		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name} ${bam_files}
-		samtools index ${name}
+		samtools merge -f -@${task.cpus} --reference ${params.genome_fasta_file} ${name}.cram ${bam_files}
+		samtools index ${name}.cram
 		"""
 	} else {
 		
 		"""
-		ln -s ${bam_files} ${name}
-		ln -s ${bam_files}.crai ${name}.crai
+		if [[ ${bam_files} == *.cram ]]; then
+			ln -s ${bam_files} ${name}.cram;
+			if [ -f ${bam_files}.crai ]; then
+				ln -s ${bam_files}.crai ${name}.cram.crai;
+			else 
+				samtools index ${name}.cram;
+			fi
+		fi	
+		if [[ ${bam_files} == *.bam ]]; then
+			ln -s ${bam_files} ${name}.bam;
+			if [ -f ${bam_files}.bai ]; then
+				ln -s ${bam_files}.bai ${name}.bam.bai;
+			else 
+				samtools index ${name}.bam;
+			fi
+		fi	
 		"""
 	}
 }
@@ -85,7 +99,7 @@ process call_genotypes {
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
-	echo "${bams_paths}" | grep -v ".crai" > filelist.txt
+	echo "${bams_paths}" | grep -v ".crai" | grep -v ".bai" > filelist.txt
 	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
