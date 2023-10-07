@@ -185,7 +185,6 @@ process extract_context {
 // Annotates with pheWAS, clinvar, finemapping, grasp, ebi-gwas phenotypes
 process annotate_with_phenotypes {
     conda params.conda
-    publishDir params.outdir
     label "high_mem"
 
     input:
@@ -221,7 +220,7 @@ process merge_annotations {
         path name
     
     script:
-    name = "cavs.annotations.bed.gz"
+    name = "snvs.annotations.bed.gz"
     """
     python3 $moduleDir/bin/merge_annotations.py \
         ${unique_snps} \
