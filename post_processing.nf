@@ -354,4 +354,10 @@ workflow annotateDHS {
 workflow tmp {
     Channel.fromPath("/net/seq/data2/projects/sabramov/ENCODE4/dnase-genotypes-round2/output/unique_variants.bed")
         | (annotate_with_phenotypes & extract_context & mutationRates)
+        
+    merge_annotations(
+        annotate_with_phenotypes.out, 
+        extract_context.out,
+        mutationRates.out
+    )
 }
