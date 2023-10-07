@@ -14,7 +14,7 @@ _comp = {
     }
 
 def revcomp(s):
-    return ''.join([_comp.get(x) for x in s[::-1]])
+    return ''.join([_comp.get(x, 'N') for x in s[::-1]])
 
 def palindromic(ref, alt):
     return {ref, alt} == {'A', 'T'} or {ref, alt} == {'G', 'C'}
