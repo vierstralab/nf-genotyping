@@ -157,7 +157,7 @@ process process_mutation_rates {
     bcftools query -f"%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/MR\t%INFO/MG\n" \
         ${vcf} | awk '{print "chr"\$0}' | bedtools intersect \
         -a variants_pos.bed -b stdin -sorted -wa -wb \
-        | awk -F'\t' '\$6 == \$11' cut -f1-6,12-13 >> ${name}
+        | awk -F'\t' '\$6 == \$11' | cut -f1-6,12-13 >> ${name}
     """
 }
 
