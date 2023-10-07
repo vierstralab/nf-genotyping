@@ -3,14 +3,29 @@ nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
 
+process extract_variants_from_vcf {
+    params.conda
+
+    output:
+        path name
+
+    script:
+    name = "unique_variants.bed"
+    """
+    bcftools query -f'%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT\t%INFO/AA\n' \
+        ${params.genotype_file} > ${name}
+    """
+}
+
+
 process motif_counts {
-    // scratch true
+    scratch true
     tag "${motif_id}"
     conda params.conda
     publishDir "${params.outdir}/motif_counts"
 
     input:
-        tuple val(motif_id), path(pwm_path), path(moods_file), path(pval_file)
+        tuple val(motif_id), path(pwm_path), path(moods_file), path(variants)
 
     output:
         tuple val(motif_id), path(counts_file)
@@ -18,6 +33,7 @@ process motif_counts {
     script:
     counts_file = "${motif_id}.counts.bed"
     """
+    cut -f1-6 ${variants} | grep -v '#' > no_header_file.bed
     echo -e "#chr\tstart\tend\tID\tref\talt\tmotif\toffset\twithin\tstrand\tref_score\talt_score\tseq" > ${counts_file}
     zcat ${moods_file} \
         | bedmap \
@@ -27,7 +43,7 @@ process motif_counts {
             --delim "|" \
             --multidelim ";" \
             --echo \
-            --echo-map <(tail -n+2 ${pval_file}) \
+            --echo-map <(no_header_file.bed) \
             - \
         | python3 $projectDir/bin/parse_variants_motifs.py \
             ${params.genome_fasta_file} \
@@ -54,22 +70,6 @@ process tabix_index {
     sort-bed ${counts} >> tmp.bed
     bgzip -c tmp.bed > ${name}
     tabix ${name}
-    """
-}
-
-
-process extract_variants_from_vcf {
-    params.conda
-
-    output:
-        path name
-
-    script:
-    name = "unique_variants.bed"
-    """
-    bcftools query -f'%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT\n' \
-        ${params.genotype_file} > ${name}
-    
     """
 }
 
@@ -147,11 +147,12 @@ process process_mutation_rates {
     script:
     name = "${vcf.simpleName}.bed"
     """
+    cut -f1-6 ${variants_file} > variants_pos.bed
     echo -e "#chr\tstart\tend\tID\tref\talt\tchr\tstart_mr\tend_mr\tref_mr\talt_mr\tmut_rates_roulette\tmut_rates_gnomad" > ${name}
     
     bcftools query -f"%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/MR\t%INFO/MG\n" \
         ${vcf} | awk '{print "chr"\$0}' | bedtools intersect \
-        -a ${variants_file} -b stdin -sorted -wa -wb \
+        -a variants_pos.bed -b stdin -sorted -wa -wb \
         | awk -F'\t' '\$6 == \$11' cut -f1-6,12-13 >> ${name}
     """
 }
@@ -346,4 +347,9 @@ workflow annotateDHS {
 		| make_dhs_annotation
 		| collectFile(storeDir: "${params.outdir}",
 			name: "genotypes_annotation.bed")
+}
+
+workflow tmp {
+    Channel.fromPath("/net/seq/data2/projects/sabramov/ENCODE4/dnase-genotypes-round2/output/unique_variants.bed")
+        | (annotate_with_phenotypes & extract_context & mutationRates)
 }
