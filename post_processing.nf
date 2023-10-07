@@ -12,8 +12,9 @@ process extract_variants_from_vcf {
     script:
     name = "unique_variants.bed"
     """
+    echo -e "#chr\tstart\tend\tID\tref\talt\tAA" > ${name}
     bcftools query -f'%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT\t%INFO/AA\n' \
-        ${params.genotype_file} > ${name}
+        ${params.genotype_file} >> ${name}
     """
 }
 
@@ -73,7 +74,6 @@ process tabix_index {
     """
 }
 
-
 process make_iupac_genome {
 	conda "${params.conda}"
     tag "${prefix}"
@@ -90,7 +90,11 @@ process make_iupac_genome {
 	name = "${prefix}.iupac.genome.fa"
 	additional_params = sample_id ? "--sample ${sample_id}" : ""
     """
-    python3 $moduleDir/bin/nonref_genome.py ${params.genome_fasta_file} ${params.genotype_file} ${name} ${additional_params}
+    python3 $moduleDir/bin/nonref_genome.py \
+        ${params.genome_fasta_file} \
+        ${params.genotype_file} \
+        ${name} \
+        ${additional_params}
     """
 }
 
@@ -196,7 +200,6 @@ process annotate_with_phenotypes {
     script:
     name = "phenotypes_ann.bed"
     """
-    echo "Annotating"
     python3 $moduleDir/bin/annotate_with_phenotypes.py \
         ${params.phenotypes_data} \
         ${pval_file} \
