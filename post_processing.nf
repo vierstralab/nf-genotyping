@@ -352,6 +352,7 @@ workflow annotateDHS {
 }
 
 workflow tmp {
+    params.moods_scans_dir = "${params.outdir}/moods_scans"
     Channel.fromPath("/net/seq/data2/projects/sabramov/ENCODE4/dnase-genotypes-round2/output/unique_variants.bed")
         | motifCounts
 }
