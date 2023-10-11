@@ -34,7 +34,7 @@ process motif_counts {
     script:
     counts_file = "${motif_id}.counts.bed"
     """
-    cut -f1-6 ${variants} | grep -v '#' > no_header_file.bed
+    
     echo -e "#chr\tstart\tend\tID\tref\talt\tmotif\toffset\twithin\tstrand\tref_score\talt_score\tseq" > ${counts_file}
     zcat ${moods_file} \
         | bedmap \
@@ -44,7 +44,7 @@ process motif_counts {
             --delim "|" \
             --multidelim ";" \
             --echo \
-            --echo-map <(no_header_file.bed) \
+            --echo-map <(cut -f1-6 ${variants} | grep -v '#') \
             - \
         | python3 $projectDir/bin/parse_variants_motifs.py \
             ${params.genome_fasta_file} \
@@ -154,10 +154,11 @@ process process_mutation_rates {
     cut -f1-6 ${variants_file} > variants_pos.bed
     echo -e "#chr\tstart\tend\tID\tref\talt\tchr\tstart_mr\tend_mr\tref_mr\talt_mr\tmut_rates_roulette\tmut_rates_gnomad" > ${name}
     
-    bcftools query -f"%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/MR\t%INFO/MG\n" \
-        ${vcf} | awk '{print "chr"\$0}' | bedtools intersect \
-        -a variants_pos.bed -b stdin -sorted -wa -wb \
-        | awk -F'\t' '\$6 == \$11' | cut -f1-6,12-13 >> ${name}
+    bcftools query -f"%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/MR\t%INFO/MG\n" ${vcf} \
+        | awk '{print "chr"\$0}' \
+        | bedtools intersect -a variants_pos.bed -b stdin -sorted -wa -wb \
+        | awk -F'\t' '\$6 == \$11' \
+        | cut -f1-6,12-13 >> ${name}
     """
 }
 
