@@ -51,7 +51,7 @@ def main(mat, genotyping_meta, outdir, min_hets=100):
 def read_genotype_stats(bcftools_stats):
     stats = pd.read_table(bcftools_stats)
     stats = stats.iloc[:,2:]
-    stats.columns = stats.columns.str.replace(r"(\[.*\])","")
+    stats.columns = stats.columns.str.replace(r"(\[.*\])","", regex=True)
     stats.rename(columns={'sample': 'indiv_id'}, inplace=True)
     return stats
 
