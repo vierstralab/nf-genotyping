@@ -304,7 +304,7 @@ workflow scanWithMoodsReference {
 workflow {
     params.moods_scans_dir = "${params.outdir}/moods_scans"
     extract_variants_from_vcf()
-        | (motifCounts & annotate_with_phenotypes & extract_context & mutationRates)
+        | (annotate_with_phenotypes & extract_context & mutationRates)
     
     merge_annotations(
         annotate_with_phenotypes.out, 
