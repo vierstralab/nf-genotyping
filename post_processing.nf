@@ -152,7 +152,7 @@ process process_mutation_rates {
     name = "${vcf.simpleName}.bed"
     """
     cut -f1-6 ${variants_file} > variants_pos.bed
-    echo -e "#chr\tstart\tend\tID\tref\talt\tchr\tstart_mr\tend_mr\tref_mr\talt_mr\tmut_rates_roulette\tmut_rates_gnomad" > ${name}
+    echo -e "#chr\tstart\tend\tID\tref\talt\tmut_rates_roulette\tmut_rates_gnomad" > ${name}
     
     bcftools query -f"%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/MR\t%INFO/MG\n" ${vcf} \
         | awk '{print "chr"\$0}' \
