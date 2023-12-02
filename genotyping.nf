@@ -152,8 +152,7 @@ process merge_vcfs {
 		val region_vcfs
 
 	output:
-		tuple path(name), path("${name}.csi")
-		tuple path("all.filtered.vcf.gz"), path("all.filtered.vcf.gz.csi")
+		tuple path(name), path("${name}.csi"), path("all.filtered.vcf.gz"), path("all.filtered.vcf.gz.csi")
 
 	script:
 	name = "all.filtered.snps.vcf.gz"
@@ -296,9 +295,10 @@ workflow genotyping {
 		merged_vcf = call_genotypes(genome_chunks, merged_bamfiles)
 			| collect(flat: true, sort: true)
 			| merge_vcfs
+            | map(it -> tuple(it[0], it[1]))
+            | (annotate_vcf & vcf_stats)
 		
-		merged_vcf[0] 
-			| (annotate_vcf | convert_to_bed) & vcf_stats
+        annotate_vcf.out | convert_to_bed
 	emit:
 		annotate_vcf.out
 }
