@@ -3,6 +3,7 @@ nextflow.enable.dsl = 2
 
 params.conda = "${moduleDir}/environment.yml"
 
+
 def set_key_for_group_tuple(ch) {
   ch | groupTuple()
 	| map(it -> tuple(groupKey(it[0], it[1].size()), *it[1..(it.size()-1)]))
@@ -18,9 +19,7 @@ process merge_bamfiles {
 	memory 32.GB
 
 	input:
-// TODO: Check if the following preserves order for bam file and its corresponding index
-//		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
-    	tuple val(indiv_id), val(bam_files)
+		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
 
 	output:
 		tuple path(name), path("${name}.crai")
@@ -284,15 +283,16 @@ workflow genotyping {
 	take: 
 		bam_files
 	main:
-		merged_bamfiles = merge_bamfiles(bam_files)
+		merged_bamfiles = bam_files
+            | merge_bamfiles
 			| unique()
 			| collect(flat: true, sort: true)
+
 		genome_chunks = create_genome_chunks()
 			| flatMap(n -> n.split())
 
 		merged_vcf = call_genotypes(genome_chunks, merged_bamfiles)
-			| flatten()
-			| collect(sort: true)
+			| collect(flat: true, sort: true)
 			| merge_vcfs
 		
 		merged_vcf[0] 
@@ -302,16 +302,21 @@ workflow genotyping {
 }
 
 workflow {
-	genotypes = Channel.fromPath(params.samples_file)
+	Channel.fromPath(params.samples_file)
 		| splitCsv(header:true, sep:'\t')
-		| map(row -> tuple(row.indiv_id, row.bam_file))
+		| map(row -> tuple(
+                row.indiv_id,
+                file(row.filtered_alignments_bam),
+                file(row?.bam_index ?: "${row.filtered_alignments_bam}.crai")
+            )
+        )
 		| filter { !it[0].isEmpty() }
 		| set_key_for_group_tuple
 		| groupTuple()
-		| map(it -> tuple(it[0], it[1].join(" ")))
 		| genotyping
 }
 
+// Defunc
 workflow annotateVCF {
 	Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
 		| annotate_vcf
