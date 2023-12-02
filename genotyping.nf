@@ -298,7 +298,7 @@ workflow genotyping {
 			| merge_vcfs
 		
 		merged_vcf[0] 
-			| (annotate_vcf & vcf_stats & convert_to_bed)
+			| (annotate_vcf | convert_to_bed) & vcf_stats
 	emit:
 		annotate_vcf.out
 }
