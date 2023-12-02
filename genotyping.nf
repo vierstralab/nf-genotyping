@@ -326,5 +326,5 @@ workflow annotateVCF {
 
 workflow tmp {
 	Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
-	 	| convert_to_bed
+	 	| (convert_to_bed & vcf_stats)
 }
