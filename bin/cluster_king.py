@@ -1,5 +1,4 @@
 import argparse
-from curses import meta
 import os
 import numpy as np
 import pandas as pd
@@ -12,7 +11,7 @@ def visualize_clustering(mat, linkage, out_path):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
     dendro = hierarchy.dendrogram(linkage, no_plot=False, ax=ax1)
     g = sns.heatmap(mat.iloc[dendro['leaves'],dendro['leaves']], cmap='Blues',
-     square=True, xticklabels=False, yticklabels=False, cbar=False, ax=ax2)
+        square=True, xticklabels=False, yticklabels=False, cbar=False, ax=ax2)
     for l in ['left','right','top','bottom']:
         g.spines[l].set_visible(True)
         g.spines[l].set_color('k')
@@ -21,21 +20,26 @@ def visualize_clustering(mat, linkage, out_path):
     plt.close(fig)
 
 
-def main(mat, genotyping_meta, outdir, min_hets=100):
-    good_ids = genotyping_meta[genotyping_meta['nHets'] > min_hets].index.tolist()
+def main(mat, stats, genotyping_meta, outdir, min_hets=100):
+    good_ids = stats[stats['nHets'] >= min_hets]['indiv_id'].tolist()
     mat = mat.loc[good_ids, good_ids]
 
     linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
     cl = hierarchy.fcluster(linkage, 0.1, criterion='distance')
-    clusters = pd.DataFrame({'indiv_id': mat.index, 'genotype_cluster': cl}).sort_values(
-        by='genotype_cluster')
-    clusters['new_id'] = 'INDIV_' + clusters['genotype_cluster'].astype(str).str.zfill(5)
 
-    
-    genotyping_meta = genotyping_meta.merge(clusters,
-        on='indiv_id', how='outer').sort_values(by='genotype_cluster')
-    genotyping_meta.rename(columns={'indiv_id': 'old_indiv_id', 'new_id': 'indiv_id'}, inplace=True)
-    genotyping_meta.drop(columns=['genotype_cluster'], inplace=True)
+    clusters = pd.DataFrame({'indiv_id': mat.index, 'cluster_id': cl})
+
+    frequency = clusters['cluster_id'].value_counts().reset_index().reset_index(names='genotype_cluster')
+    clusters = clusters.merge(frequency, on='cluster_id').sort_values(by='count', ascending=False)
+
+    clusters['new_id'] = 'INDIV_' + (clusters['genotype_cluster'] + 1).astype(str).str.zfill(4)
+
+    genotyping_meta = genotyping_meta.merge(clusters[['indiv_id', 'new_id']], how='left')
+
+    genotyping_meta.rename(
+        columns={'indiv_id': 'old_indiv_id', 'new_id': 'indiv_id'},
+        inplace=True
+    )
     
     genotyping_meta.to_csv(
         os.path.join(outdir, "metadata.clustered.tsv"),
@@ -44,7 +48,7 @@ def main(mat, genotyping_meta, outdir, min_hets=100):
 
     visualize_clustering(
         mat, linkage,
-        os.path.join(outdir, 'clustering.png')
+        os.path.join(outdir, "clustering.png")
     )
 
 
@@ -82,11 +86,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     matrix = read_plink(args.plink)
     stats = read_genotype_stats(args.stats)
-    metadata = pd.read_table(args.metadata, 
-        dtype={'indiv_id': str}).merge(
-            stats,
-            suffixes=('_old', ''),
-            on='indiv_id').set_index('indiv_id')
     
-    main(matrix, metadata, args.outpath, min_hets=args.min_hets)
+    metadata = pd.read_table(args.metadata, dtype={'indiv_id': str})
+    
+    main(matrix, stats, metadata, args.outpath, min_hets=args.min_hets)
     
