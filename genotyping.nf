@@ -5,9 +5,9 @@ params.conda = "${moduleDir}/environment.yml"
 
 
 def set_key_for_group_tuple(ch) {
-  ch | groupTuple()
-	| map(it -> tuple(groupKey(it[0], it[1].size()), *it[1..(it.size()-1)]))
-	| transpose()
+    ch | groupTuple()
+        | map(it -> tuple(groupKey(it[0], it[1].size()), *it[1..(it.size()-1)]))
+        | transpose()
 }
 
 
@@ -15,8 +15,7 @@ process merge_bamfiles {
 	tag "${indiv_id}:${s}"
 
 	conda "${params.conda}"
-	cpus 2
-	memory 32.GB
+	label "medmem"
 
 	input:
 		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
@@ -69,6 +68,7 @@ process create_genome_chunks {
 process call_genotypes {
 	tag "${region}"
 	conda "${params.conda}"
+    label "highmem"
 	cpus 2
 
 	input:
@@ -146,6 +146,7 @@ process call_genotypes {
 process merge_vcfs {
 	conda "${params.conda}"
 	scratch true
+    label "highmem"
 
 	input:
 		val region_vcfs
@@ -182,6 +183,7 @@ process merge_vcfs {
 process annotate_vcf {
 	conda "${params.conda}"
 	publishDir "${params.outdir}/genotypes"
+    label "medmem"
 
 	input:
 		tuple path(snps_vcf), path(snps_vcf_index)
