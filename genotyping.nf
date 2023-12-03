@@ -320,11 +320,11 @@ workflow {
 
 // Defunc
 workflow annotateVCF {
-	Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
+	Channel.of([file(params.genotype_file), file("${params.genotype_file}.csi")])
 		| annotate_vcf
 }
 
 workflow tmp {
-	Channel.of([file(params.vcf_file), file("${params.vcf_file}.csi")])
+	Channel.of([file(params.genotype_file), file("${params.genotype_file}.csi")])
 	 	| (convert_to_bed & vcf_stats)
 }
