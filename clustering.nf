@@ -5,7 +5,6 @@ params.conda = "$moduleDir/environment.yml"
 
 
 process cluster_indivs {
-
     publishDir "${params.outdir}/clustering"
     conda params.conda
     scratch true
@@ -15,9 +14,8 @@ process cluster_indivs {
         path bcftools_stats
 
     output:
-        path('metadata.clustered.tsv')
-        tuple path('snps.clustering.king.id'), path('snps.clustering.king')
-        path('clustering.png')
+        tuple path('metadata.clustered.tsv'), path('snps.clustering.king.id'), path('snps.clustering.king'), path('clustering.png')
+
     script:
     """
     grep "PSC" ${bcftools_stats} | tail -n+2 > stats.txt
