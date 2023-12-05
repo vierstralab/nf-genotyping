@@ -260,25 +260,6 @@ process vcf_stats {
 	"""
 }
 
-process convert_to_bed {
-    conda params.conda
-    publishDir params.outdir
-
-	input:
-		tuple path(vcf), path(vcf_index)
-
-    output:
-        path name
-
-    script:
-    name = "all.genotyped.bed.gz"
-    """
-    echo "#chr\tstart\tend\tRAF\tAAF" > tmp.bed
-    bcftools query -f '%CHROM\t%END0\t%END\t%INFO/RAF\t%INFO/AAF\n' \
-        ${vcf} >> tmp.bed
-	bgzip -c tmp.bed > ${name}
-    """
-}
 
 workflow genotyping {
 	take: 
@@ -297,8 +278,7 @@ workflow genotyping {
 			| merge_vcfs
             | map(it -> tuple(it[0], it[1]))
             | (annotate_vcf & vcf_stats)
-		
-        annotate_vcf.out | convert_to_bed
+
 	emit:
 		annotate_vcf.out
 }
