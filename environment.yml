@@ -16,4 +16,5 @@ dependencies:
   - samtools=1.15
   - fastp
   - picard
+  - tectonic
 prefix: /home/sabramov/miniconda3/envs/babachi
