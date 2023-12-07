@@ -224,6 +224,7 @@ process merge_annotations {
         ${unique_snps} \
         ${context} \
         ${mutation_rates} \
+        ${params.window} \
         tmp.bed
     
     head -1 tmp.bed > res.bed
