@@ -12,8 +12,8 @@ process extract_variants_from_vcf {
     script:
     name = "unique_variants.bed"
     """
-    echo -e "#chr\tstart\tend\tID\tref\talt\tAA" > ${name}
-    bcftools query -f'%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT\t%INFO/AA\n' \
+    echo -e "#chr\tstart\tend\tID\tref\talt\tRAF\tAAF\tAA" > ${name}
+    bcftools query -f'%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT\t%INFO/RAF\t%INFO/AAF\t%INFO/AA\n' \
         ${params.genotype_file} >> ${name}
     """
 }
@@ -286,6 +286,7 @@ workflow {
         mutationRates.out
     )
 }
+
 
 
 

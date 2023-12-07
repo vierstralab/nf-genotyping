@@ -20,20 +20,19 @@ def palindromic(ref, alt):
     return {ref, alt} == {'A', 'T'} or {ref, alt} == {'G', 'C'}
 
 def is_palindromic(ref, alt):
-    
     return ref.mappalindromic_pairs.get() == alt
 
 def get_mutation_stats(df):
     sequence = df['sequence'].str
     is_palindromic = df['ref'].map(_comp) == df['alt']
-    sequence_minus1 = sequence[19]
-    sequence_plus1 = sequence[21]
+    preciding1 = sequence[19]
+    following1 = sequence[21]
     assert np.all(df['ref'] == sequence[20])
     # is_palindromic == True
     df['fwd'] = (df["ref"] + '>' + df["alt"]).isin(mutations)
 
-    is_palindromic3 = sequence_minus1.map(_comp) == sequence_plus1
-    fwd3 = (sequence_minus1 != 'T') & (sequence_plus1 != 'T') & ~(sequence_minus1 == sequence_plus1 == 'G')
+    is_palindromic3 = preciding1.map(_comp) == following1
+    fwd3 = (following1 != 'T') & (following1 != 'T') & ~(preciding1 == following1 == 'G')
     df['ref_orient'] = np.where(
         is_palindromic & ~is_palindromic3,
         fwd3 == df['fwd'],
@@ -58,11 +57,9 @@ def get_mutation_stats(df):
 
 
     # final processing
-    sequence_minus1_flipped = np.where(df['fwd'], sequence_minus1, sequence_plus1.map(_comp))
-    sequence_plus1_flipped = np.where(df['fwd'], sequence_plus1, sequence_minus1.map(_comp))
-    
-    df['signature1'] = sequence_minus1_flipped + '[' + df['sub'] + ']' + sequence_plus1_flipped
-        
+    preciding1_flipped = np.where(df['fwd'], preciding1, following1.map(_comp))
+    following1_flipped = np.where(df['fwd'], preciding1, following1.map(_comp))
+    df['signature1'] = preciding1_flipped + '[' + df['sub'] + ']' + following1_flipped
     return df
 
 
@@ -84,6 +81,4 @@ if __name__ == '__main__':
     context = pd.read_table(sys.argv[2])
     mutation_rates = pd.read_table(sys.argv[3])
     
-    main(unique_snps, context, mutation_rates).to_csv(
-        sys.argv[4], sep='\t', index=False
-    )
+    main(unique_snps, context, mutation_rates).to_csv(sys.argv[4], sep='\t', index=False)
