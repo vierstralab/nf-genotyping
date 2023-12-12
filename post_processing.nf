@@ -4,7 +4,9 @@ nextflow.enable.dsl = 2
 params.conda = "$moduleDir/environment.yml"
 
 process extract_variants_from_vcf {
-    params.conda
+    conda params.conda
+    
+    publishDir params.outdir
 
     output:
         path name
