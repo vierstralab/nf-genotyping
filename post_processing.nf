@@ -25,7 +25,7 @@ process motif_counts {
     scratch true
     tag "${motif_id}:${genome_type}"
     conda params.conda
-    publishDir "${params.outdir}/motif_counts"
+    publishDir "${params.outdir}/motif_counts_${genome_type}"
 
     input:
         tuple val(genome_type), val(motif_id), path(pwm_path), path(moods_file), path(variants)
@@ -68,7 +68,7 @@ process tabix_index {
         tuple path(name), path("${name}.tbi")
 
     script:
-    name = "${counts.simpleName}.merged.bed.gz"
+    name = "${counts.simpleName}.motif_hits.merged.bed.gz"
     """
     head -1 ${counts} > tmp.bed
     sort-bed ${counts} >> tmp.bed
@@ -98,7 +98,7 @@ process make_iupac_genome {
 
 process scan_with_moods {
     conda params.conda
-    tag "${motif_id}"
+    tag "${motif_id}:${genome_type}"
     scratch true
     publishDir "${params.outdir}/moods_scans_${genome_type}", pattern: "${name}"
 
