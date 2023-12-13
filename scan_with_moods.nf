@@ -43,17 +43,18 @@ process motif_counts {
 process tabix_index {
     conda params.conda
     publishDir params.outdir
+    tag "${genome_type}"
     label "high_mem"
     scratch true
 
     input:
-        path counts
+        tuple val(genome_type), path(counts)
 
     output:
         tuple path(name), path("${name}.tbi")
 
     script:
-    name = "${counts.simpleName}.motif_hits.merged.bed.gz"
+    name = "${genome_type}.motif_hits.merged.bed.gz"
     """
     head -1 ${counts[0]} > tmp.bed
     cat ${counts} \
