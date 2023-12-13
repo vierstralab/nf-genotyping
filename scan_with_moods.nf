@@ -58,8 +58,9 @@ process tabix_index {
     """
     head -1 ${counts[0]} > tmp.bed
     cat ${counts} \
-        | awk '\$9 == "True"' \
-        | sort-bed - >> tmp.bed
+        | awk '\$9 == "True"' > sign_hits.bed
+
+    sort-bed sign_hits.bed >> tmp.bed
 
     bgzip -c tmp.bed > ${name}
     tabix ${name}
