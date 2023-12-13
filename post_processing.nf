@@ -71,7 +71,7 @@ process extract_context {
 // Annotates with pheWAS, clinvar, finemapping, grasp, ebi-gwas phenotypes
 process annotate_with_phenotypes {
     conda params.conda
-    label "high_mem"
+    label "highmem"
 
     input:
         path pval_file

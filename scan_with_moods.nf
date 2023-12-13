@@ -44,7 +44,7 @@ process tabix_index {
     conda params.conda
     publishDir params.outdir
     tag "${genome_type}"
-    label "high_mem"
+    label "highmem"
     scratch true
 
     input:
