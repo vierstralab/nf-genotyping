@@ -70,8 +70,11 @@ process tabix_index {
     script:
     name = "${counts.simpleName}.motif_hits.merged.bed.gz"
     """
-    head -1 ${counts} > tmp.bed
-    sort-bed ${counts} >> tmp.bed
+    head -1 ${counts[0]} > tmp.bed
+    cat ${counts} \
+        | awk '\$9 == "True"' \
+        | sort-bed - >> tmp.bed
+
     bgzip -c tmp.bed > ${name}
     tabix ${name}
     """
@@ -271,10 +274,7 @@ workflow scanWithMoods {
             extract_variants_from_vcf()
         ) // genome_type, motif_id, pwm_path, moods_scans, variants
         | motif_counts // genome_type, counts_file
-        | collectFile(
-            keepHeader: true,
-            skip: 1
-        ) { it -> [ "${it[0]}.txt", it[1].text]}
+        | groupTuple() // genome_type, counts_files
         | tabix_index
 }
 
