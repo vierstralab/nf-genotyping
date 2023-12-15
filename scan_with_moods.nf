@@ -129,7 +129,7 @@ workflow readMotifsList {
     main:
         scans = Channel.fromPath(params.motifs_list)
             | splitCsv(header:true, sep:'\t')
-            | map(row -> tuple(row.motif, file(row.motif_file)))
+            | map(row -> tuple(row.motif_id, file(row.pwm)))
     emit:
         scans
 }
