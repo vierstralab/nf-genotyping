@@ -150,12 +150,13 @@ workflow {
 // Defunc
 
 workflow tmp {
-    ref_hits = Channel.fromPath("/net/seq/data2/projects/sabramov/ENCODE4/dnase-genotypesv2/round2/output/motif_counts_ref/*.counts.bed")
-        | map(path -> tuple("ref", path))
-    
-    Channel.fromPath("/net/seq/data2/projects/sabramov/ENCODE4/dnase-genotypesv2/round2/output/motif_counts_alt/*.counts.bed")
-        | map(path -> tuple("alt", path))
-        | mix(ref_hits)
-        | groupTuple()
+    make_iupac_genome()
+        | combine(readMotifsList())
+        | scan_with_moods // genome_type, motif_id, pwm_path, moods_scans
+        | combine(
+            extract_variants_from_vcf()
+        ) // genome_type, motif_id, pwm_path, moods_scans, variants
+        | motif_counts // genome_type, counts_file
+        | groupTuple() // genome_type, counts_files
         | tabix_index
 }
