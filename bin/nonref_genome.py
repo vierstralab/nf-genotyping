@@ -28,6 +28,7 @@ def get_sample_gt(rec, sample):
             result.add(rec.ref)
         elif allele_count == 1:
             assert len(rec.alts) == 1
+            assert len(rec.alts[0]) == 1
             result.add(rec.alts[0])
         else:
             raise AssertionError
@@ -52,23 +53,31 @@ def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
                 if any([len(i) > 1 for i in rec.alleles]):
                     continue
 
-                key = f'{rec.contig}@{rec.start}'
-                if old_key is None or key != old_key:
-                    alleles = set()
+                ref = rec.ref
+                alts = rec.alts
+                ambig = get_iupac(ref, alts)
+                try:
+                    fasta[rec.contig][rec.start] = ambig
+                except KeyError as e:
+                    print('KeyError: {}'.format(e))
+                    pass
+                # key = f'{rec.contig}@{rec.start}'
+                # if old_key is None or key != old_key:
+                #     alleles = set()
                 
-                if sample is not None:
-                    alleles |= get_sample_gt(rec, sample)
-                else:
-                    for sample in vcf.header.samples:
-                        alleles |= get_sample_gt(rec, sample)
+                # if sample is not None:
+                #     alleles |= get_sample_gt(rec, sample)
+                # else:
+                #     for sample in vcf.header.samples:
+                #         alleles |= get_sample_gt(rec, sample)
 
-                old_key = key
-                if len(alleles) > 0:
-                    ambig = get_iupac(list(alleles))
-                    try:
-                        fasta[rec.contig][rec.start] = ambig
-                    except KeyError as e:
-                        pass
+                # old_key = key
+                # if len(alleles) > 0:
+                #     ambig = get_iupac(alleles)
+                #     try:
+                #         fasta[rec.contig][rec.start] = ambig
+                #     except KeyError as e:
+                #         pass
 
 
 if __name__ == '__main__':
