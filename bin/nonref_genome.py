@@ -55,7 +55,7 @@ def main(orig_fasta_file, vcf_file, out_fasta_file, sample):
 
                 ref = rec.ref
                 alts = rec.alts
-                ambig = get_iupac(set([ref] + alts))
+                ambig = get_iupac(set([ref, *alts]))
                 try:
                     fasta[rec.contig][rec.start] = ambig
                 except KeyError as e:
