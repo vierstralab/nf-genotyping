@@ -154,7 +154,7 @@ workflow tmp {
         | combine(readMotifsList())
         | scan_with_moods // genome_type, motif_id, pwm_path, moods_scans
         | combine(
-            extract_variants_from_vcf()
+            Channel.fromPath('/net/seq/data2/projects/sabramov/ENCODE4/dnase-genotypesv2/round2/output/unique_variants.bed')
         ) // genome_type, motif_id, pwm_path, moods_scans, variants
         | motif_counts // genome_type, counts_file
         | groupTuple() // genome_type, counts_files
