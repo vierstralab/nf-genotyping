@@ -80,6 +80,6 @@ if __name__ == '__main__':
     unique_snps = pd.read_table(sys.argv[1])
     context = pd.read_table(sys.argv[2])
     mutation_rates = pd.read_table(sys.argv[3])
-    window_size = int(sys.argv[3])
+    window_size = int(sys.argv[4])
     
-    main(unique_snps, context, mutation_rates, window_size).to_csv(sys.argv[4], sep='\t', index=False)
+    main(unique_snps, context, mutation_rates, window_size).to_csv(sys.argv[5], sep='\t', index=False)
