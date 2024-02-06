@@ -2,72 +2,84 @@ import pandas as pd
 import sys
 from tqdm import tqdm
 import numpy as np
+from matplotlib import pyplot as plt
 tqdm.pandas()
 
 
 mutations = ['C>A', 'C>T', 'C>G', 'T>A']
-_comp = {
+comp_vectorized = np.vectorize({
         'A': 'T',
         'C': 'G',
         'G': 'C',
         'T': 'A'
-    }
+    }.get)
 fwd_mutations = mutations + [f"{mut[2]}>{mut[0]}" for mut in mutations]
+reverse_mapping = np.vectorize({sub: sub[2] + '>' + sub[0] for sub in fwd_mutations}.get)
 nucleotide_pairs_priority = {
     'AA', 'CC', 'CA', 'AC', 'GA', 'AG'
 }
 
+def find_palindrome_lengths(sequences, mid):
+    left_half = sequences[:, :mid]
+    right_half = sequences[:, mid + 1:]
 
-def reverse_complement(seq):
-    seq_array = np.array(list(seq))
-    comp_array = np.vectorize(_comp.get)(seq_array)
-    rev_comp_array = comp_array[::-1]
-    return ''.join(rev_comp_array)
+    rev_comp_right_half = comp_vectorized(right_half.astype(str)).astype('S1')[:, ::-1]
 
-def find_palindrome_length(seq):
-    rev_comp_seq = reverse_complement(seq)
-    length = len(seq)
-    mid = length // 2
+    mismatches = left_half != rev_comp_right_half
+    first_mismatch_indices = np.argmax(mismatches, axis=1)
+    
+    no_mismatch = ~mismatches.any(axis=1)
+    first_mismatch_indices[no_mismatch] = mid
 
-    for i in range(mid):
-        if seq[mid + i + 1] != rev_comp_seq[mid + i + 1]:
-            return i
-
-    return mid
+    return first_mismatch_indices
 
 
 def get_mutation_stats(df, window_size):
-    sequence = df['sequence'].str.upper().str
-    assert np.all(df['ref'] == sequence[window_size])
-    df['palindrome_length'] = sequence.apply(find_palindrome_length)
-    is_palindromic = (df['ref'].map(_comp) == df['alt']) & (df['palindrome_length'] < window_size)
+    sequence = df['sequence'].str
+    if not np.all(df['ref'] == sequence[window_size]):
+        print(df['ref'], sequence[window_size], sequence)
+        raise ValueError('Reference allele does not match the sequence')
+        
+    char_array = np.frombuffer(''.join(df['sequence'].values).encode(), dtype='S1').reshape(len(df), -1)
+    
+    # df['palindrome_length'] = df['sequence'].apply(find_palindrome_length)
+    df['palindrome_length'] = find_palindrome_lengths(char_array, window_size)
+    is_palindromic = (comp_vectorized(df['ref']) == df['alt']) & (df['palindrome_length'] < window_size)
+    
+    preceding_index = window_size - df['palindrome_length'] - 1
+    preceding_index = np.maximum(preceding_index, 0)
+    following_index = window_size + df['palindrome_length'] + 1
+    following_index = np.minimum(following_index, 2 * window_size)
+    preceding_nucleotide = char_array[np.arange(len(char_array)), preceding_index].astype(str)
+    following_nucleotide = char_array[np.arange(len(char_array)), following_index].astype(str)
+    resolved_pair = np.core.defchararray.add(preceding_nucleotide, following_nucleotide)
+
     palindrome_orient = np.where(
-        is_palindromic.astype(int),
-        (sequence[window_size - df['palindrome_length'] - 1]
-        + sequence[window_size + df['palindrome_length'] + 1]
-        ).isin(nucleotide_pairs_priority),
+        is_palindromic,
+        np.isin(resolved_pair, nucleotide_pairs_priority),
         True
     )
+
     df['fwd'] = (df["ref"] + '>' + df["alt"]).isin(fwd_mutations)
     fwd_sub = np.where(
         df['fwd'],
         df["ref"] + '>' + df["alt"],
-        df["alt"].map(_comp) + '>' + df["ref"].map(_comp)
+        np.char.add(comp_vectorized(df["alt"].values),
+                    np.char.add('>', comp_vectorized(df["ref"].values))
+                   )
     )
-    df['ref_orient'] = ~(np.isin(fwd_sub, mutations) ^ palindrome_orient)
+    df['ref_orient'] = ~(np.isin(fwd_sub, mutations).squeeze() ^ palindrome_orient)
     df['sub'] = np.where(
         df['ref_orient'], 
         fwd_sub,
-        fwd_sub.map({
-            sub: sub[2] + '>' + sub[0] for sub in mutations
-        })
+        reverse_mapping(fwd_sub)
     )
 
     # final processing
     preceding1 = sequence[window_size - 1]
     following1 = sequence[window_size + 1]
-    preciding1_flipped = np.where(df['fwd'], preceding1, following1.map(_comp))
-    following1_flipped = np.where(df['fwd'], following1, preceding1.map(_comp))
+    preciding1_flipped = np.where(df['fwd'], preceding1, comp_vectorized(following1))
+    following1_flipped = np.where(df['fwd'], following1, comp_vectorized(preceding1))
     df['signature1'] = preciding1_flipped + '[' + df['sub'] + ']' + following1_flipped
     return df
 
