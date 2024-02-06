@@ -96,7 +96,7 @@ process annotate_with_phenotypes {
 process merge_annotations {
     conda params.conda
     publishDir params.outdir
-    scratch true
+    //scratch true
 
     input:
         path unique_snps
