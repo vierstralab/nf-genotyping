@@ -40,7 +40,9 @@ def find_palindrome_length(seq):
 
 def get_mutation_stats(df, window_size):
     sequence = df['sequence'].str.upper()
-    assert np.all(df['ref'] == sequence[window_size])
+    if not np.all(df['ref'] == sequence[window_size]):
+        print(df['ref'], sequence[window_size], sequence)
+        raise ValueError('Reference allele does not match the sequence')
     df['palindrome_length'] = sequence.apply(find_palindrome_length)
     is_palindromic = (df['ref'].map(_comp) == df['alt']) & (df['palindrome_length'] < window_size)
     palindrome_orient = np.where(
