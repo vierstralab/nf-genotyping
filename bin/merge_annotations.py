@@ -17,8 +17,6 @@ nucleotide_pairs_priority = {
     'AA', 'CC', 'CA', 'AC', 'GA', 'AG'
 }
 
-import pandas as pd
-import numpy as np
 
 def reverse_complement(seq):
     seq_array = np.array(list(seq))
@@ -39,10 +37,8 @@ def find_palindrome_length(seq):
 
 
 def get_mutation_stats(df, window_size):
-    sequence = df['sequence'].str.upper()
-    if not np.all(df['ref'] == sequence[window_size]):
-        print(df['ref'], sequence[window_size], sequence)
-        raise ValueError('Reference allele does not match the sequence')
+    sequence = df['sequence'].str.upper().str
+    assert np.all(df['ref'] == sequence[window_size])
     df['palindrome_length'] = sequence.apply(find_palindrome_length)
     is_palindromic = (df['ref'].map(_comp) == df['alt']) & (df['palindrome_length'] < window_size)
     palindrome_orient = np.where(
