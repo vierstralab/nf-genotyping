@@ -12,53 +12,64 @@ _comp = {
         'G': 'C',
         'T': 'A'
     }
+fwd_mutations = mutations + [f"{mut[2]}>{mut[0]}" for mut in mutations]
+nucleotide_pairs_priority = {
+    'AA', 'CC', 'CA', 'AC', 'GA', 'AG'
+}
 
-def revcomp(s):
-    return ''.join([_comp.get(x, 'N') for x in s[::-1]])
+import pandas as pd
+import numpy as np
 
-def palindromic(ref, alt):
-    return {ref, alt} == {'A', 'T'} or {ref, alt} == {'G', 'C'}
+def reverse_complement(seq):
+    seq_array = np.array(list(seq))
+    comp_array = np.vectorize(_comp.get)(seq_array)
+    rev_comp_array = comp_array[::-1]
+    return ''.join(rev_comp_array)
 
-def is_palindromic(ref, alt):
-    return ref.mappalindromic_pairs.get() == alt
+def find_palindrome_length(seq):
+    rev_comp_seq = reverse_complement(seq)
+    length = len(seq)
+    mid = length // 2
+
+    for i in range(mid):
+        if seq[mid + i + 1] != rev_comp_seq[mid + i + 1]:
+            return i
+
+    return mid
+
 
 def get_mutation_stats(df, window_size):
-    sequence = df['sequence'].str
-    is_palindromic = df['ref'].map(_comp) == df['alt']
-    preciding1 = sequence[window_size - 1]
-    following1 = sequence[window_size + 1]
+    sequence = df['sequence'].str.upper()
     assert np.all(df['ref'] == sequence[window_size])
-    # is_palindromic == True
-    df['fwd'] = (df["ref"] + '>' + df["alt"]).isin(mutations)
-
-    is_palindromic3 = preciding1.map(_comp) == following1
-    fwd3 = (following1 != 'T') & (following1 != 'T') & ~(preciding1 == following1 == 'G')
-    df['ref_orient'] = np.where(
-        is_palindromic & ~is_palindromic3,
-        fwd3 == df['fwd'],
+    df['palindrome_length'] = sequence.apply(find_palindrome_length)
+    is_palindromic = (df['ref'].map(_comp) == df['alt']) & (df['palindrome_length'] < window_size)
+    palindrome_orient = np.where(
+        is_palindromic.astype(int),
+        (sequence[window_size - df['palindrome_length'] - 1]
+        + sequence[window_size + df['palindrome_length'] + 1]
+        ).isin(nucleotide_pairs_priority),
         True
     )
-    df['sub'] = np.where(
-        df['fwd'], 
+    df['fwd'] = (df["ref"] + '>' + df["alt"]).isin(fwd_mutations)
+    fwd_sub = np.where(
+        df['fwd'],
         df["ref"] + '>' + df["alt"],
-        df["alt"] + '>' + df["ref"]
+        df["alt"].map(_comp) + '>' + df["ref"].map(_comp)
+    )
+    df['ref_orient'] = ~(np.isin(fwd_sub, mutations) ^ palindrome_orient)
+    df['sub'] = np.where(
+        df['ref_orient'], 
+        fwd_sub,
+        fwd_sub.map({
+            sub: sub[2] + '>' + sub[0] for sub in mutations
+        })
     )
 
-    # is_palindromic == False
-    for mut, ref_orient, fwd  in [
-        (df["ref"]+ '>' + df["alt"], True, True),
-        (df["ref"].map(_comp)  + '>' + df["alt"].map(_comp), True, False),
-        (df["alt"] + '>' + df["ref"], False, True),
-        (df["alt"].map(_comp)  + '>' + df["ref"].map(_comp), False, False)
-    ]:
-        df.loc[~df['is_palindormic'] & mut.isin(mutations), 'sub'] = mut
-        df.loc[~df['is_palindormic'] & mut.isin(mutations), 'ref_orient'] = ref_orient
-        df.loc[~df['is_palindormic'] & mut.isin(mutations), 'fwd'] = fwd
-
-
     # final processing
-    preciding1_flipped = np.where(df['fwd'], preciding1, following1.map(_comp))
-    following1_flipped = np.where(df['fwd'], preciding1, following1.map(_comp))
+    preceding1 = sequence[window_size - 1]
+    following1 = sequence[window_size + 1]
+    preciding1_flipped = np.where(df['fwd'], preceding1, following1.map(_comp))
+    following1_flipped = np.where(df['fwd'], following1, preceding1.map(_comp))
     df['signature1'] = preciding1_flipped + '[' + df['sub'] + ']' + following1_flipped
     return df
 
@@ -66,13 +77,20 @@ def get_mutation_stats(df, window_size):
 def main(unique_snps, context, mutation_rates, window_size):
     result = unique_snps.merge(context)
     assert len(result.index) == len(unique_snps.index)
-    
+
+    result = get_mutation_stats(result, window_size)
+    result['cpg'] = (
+        (
+            (result['sub'] != 'A>T') 
+            & (result['signature1'].str.endswith('G'))
+        ) | (
+            (result['sub'] == 'C>G') 
+            & (result['signature1'].str.startswith('C'))
+            )
+        )
     result = result.merge(
         mutation_rates, how='left'
     )
-    result = get_mutation_stats(result, window_size)
-    result['cpg'] = ((result['sub'] != 'A>T') & (result['signature1'].str.endswith('G'))) | ((result['sub'] == 'C>G') & (result['signature1'].str.startswith('C')))
-
     return result
 
 
