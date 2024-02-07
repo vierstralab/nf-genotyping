@@ -23,10 +23,8 @@ nucleotide_pairs_priority = [
 def rc(char_array):
     return comp_vectorized(char_array.astype(str)).astype('S1')[:, ::-1]
 
-def find_palindrome_lengths(sequences, window_size):
-    length = sequences.shape[1]
-
-    mid = length // 2
+def find_palindrome_lengths(sequences):
+    mid = sequences.shape[1] // 2
 
     left_half = sequences[:, :mid]
     right_half = sequences[:, mid + 1:]
@@ -57,7 +55,7 @@ def get_mutation_stats(df, window_size):
         
     char_array = np.frombuffer(''.join(df['short_sequence'].values).encode(), dtype='S1').reshape(len(df), -1)
     
-    df['palindrome_length'] = find_palindrome_lengths(char_array, window_size)
+    df['palindrome_length'] = find_palindrome_lengths(char_array)
     is_palindromic = (df['ref'].map(comp) == df['alt']) & (df['palindrome_length'] < window_size)
     
     preceding_index = window_size - df['palindrome_length'] - 1
