@@ -13,6 +13,7 @@ comp = {
         'G': 'C',
         'T': 'A'
     }
+
 comp_vectorized = np.vectorize(comp.get)
 fwd_mutations = mutations + [f"{mut[2]}/{mut[0]}" for mut in mutations]
 reverse_mapping = np.vectorize({sub: sub[2] + '/' + sub[0] for sub in set(fwd_mutations) - set(mutations)}.get)
@@ -66,7 +67,6 @@ def get_mutation_stats(df, window_size):
     following_nucleotide = char_array[np.arange(len(char_array)), following_index].astype(str)
     resolved_pair = np.core.defchararray.add(preceding_nucleotide, following_nucleotide).astype(str)
 
-    df['resolved_pair'] = resolved_pair
     palindrome_orient = np.where(
         is_palindromic,
         np.isin(resolved_pair, nucleotide_pairs_priority),
@@ -86,9 +86,6 @@ def get_mutation_stats(df, window_size):
         fwd_sub,
         reverse_mapping(fwd_sub)
     )
-
-    df['fwd_sub'] = fwd_sub
-    df['palindrome_orient'] = palindrome_orient
 
     # final processing
     preceding_rc = transform_into_str(rc(char_array[:, :window_size]))
