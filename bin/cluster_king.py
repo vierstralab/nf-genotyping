@@ -29,12 +29,12 @@ def get_clusters(mat):
     clusters = clusters.merge(frequency, on='cluster_id').sort_values(by='count', ascending=False)
 
     clusters['new_id'] = 'INDIV_' + (clusters['genotype_cluster'] + 1).astype(str).str.zfill(4)
-    return clusters
+    return clusters, linkage, cl
 
 
 def main(mat, stats, genotyping_meta, outdir, min_hets=100):
     good_ids = stats.query('nHets >= min_hets')['indiv_id'].tolist()
-    clusters = get_clusters(mat.loc[good_ids, good_ids])
+    clusters, _, _ = get_clusters(mat.loc[good_ids, good_ids])
 
     genotyping_meta = genotyping_meta.merge(clusters[['indiv_id', 'new_id']], how='left')
 
