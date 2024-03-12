@@ -33,7 +33,7 @@ def get_clusters(mat):
 
 
 def main(mat, stats, genotyping_meta, outdir, min_hets=100):
-    good_ids = stats.query('nHets >= min_hets')['indiv_id'].tolist()
+    good_ids = stats.query(f'nHets >= {min_hets}')['indiv_id'].tolist()
     clusters, _, _ = get_clusters(mat.loc[good_ids, good_ids])
 
     genotyping_meta = genotyping_meta.merge(clusters[['indiv_id', 'new_id']], how='left')
