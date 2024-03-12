@@ -19,11 +19,7 @@ def visualize_clustering(mat, linkage, out_path):
     plt.savefig(out_path)
     plt.close(fig)
 
-
-def main(mat, stats, genotyping_meta, outdir, min_hets=100):
-    good_ids = stats[stats['nHets'] >= min_hets]['indiv_id'].tolist()
-    mat = mat.loc[good_ids, good_ids]
-
+def get_clusters(mat):
     linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
     cl = hierarchy.fcluster(linkage, 0.1, criterion='distance')
 
@@ -33,6 +29,12 @@ def main(mat, stats, genotyping_meta, outdir, min_hets=100):
     clusters = clusters.merge(frequency, on='cluster_id').sort_values(by='count', ascending=False)
 
     clusters['new_id'] = 'INDIV_' + (clusters['genotype_cluster'] + 1).astype(str).str.zfill(4)
+    return clusters
+
+
+def main(mat, stats, genotyping_meta, outdir, min_hets=100):
+    good_ids = stats.query('nHets >= min_hets')['indiv_id'].tolist()
+    clusters = get_clusters(mat.loc[good_ids, good_ids])
 
     genotyping_meta = genotyping_meta.merge(clusters[['indiv_id', 'new_id']], how='left')
 

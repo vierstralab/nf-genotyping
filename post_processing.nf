@@ -151,6 +151,25 @@ workflow {
     )
 }
 
+process extract_initial_reads {
+    conda params.conda
+    publishDir params.outdir
+
+    output:
+        path name
+
+    script:
+    name = "all.snps.initial_reads.bed.gz"
+    """
+    bcftools query -i'GT=="alt"' \
+        -f '%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT[\t%GT,%AD{0},%AD{1}]\n' \
+        ${params.genotype_file} | bgzip > ${name}
+    """
+}
+
+workflow extractInitialReadsRound1 {
+    extract_initial_reads()
+}
 
 
 
