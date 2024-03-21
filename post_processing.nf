@@ -150,7 +150,7 @@ process convert_to_plink_bed {
     script:
     prefix = "plink.no_rsid"
     """
-    bcftools view -s \$1 ${params.genotype_file} \
+    bcftools view ${params.genotype_file} \
         | bcftools norm --threads 8 -m-any \
             --check-ref w -f /home/jvierstra/data/1k_genomes/GRCh38_full_analysis_set_plus_decoy_hla.fa \
         | bcftools annotate --threads 8 -x ID -I  +'%CHROM:%POS:%REF:%ALT' - \
