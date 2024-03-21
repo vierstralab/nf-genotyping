@@ -143,6 +143,7 @@ process convert_to_plink_bed {
     conda params.conda
     publishDir "${params.outdir}/plink"
     scratch true
+    cpus 8
 
     output:
         path("${prefix}.*")
@@ -151,10 +152,10 @@ process convert_to_plink_bed {
     prefix = "plink.no_rsid"
     """
     bcftools view ${params.genotype_file} \
-        | bcftools norm --threads 8 -m-any \
+        | bcftools norm --threads ${task.cpus} -m-any \
             --check-ref w -f /home/jvierstra/data/1k_genomes/GRCh38_full_analysis_set_plus_decoy_hla.fa \
-        | bcftools annotate --threads 8 -x ID -I  +'%CHROM:%POS:%REF:%ALT' - \
-        | bcftools norm --threads 8 -Ob --rm-dup both - \
+        | bcftools annotate --threads ${task.cpus} -x ID -I  +'%CHROM:%POS:%REF:%ALT' - \
+        | bcftools norm --threads ${task.cpus} -Ob --rm-dup both - \
         > no_rsid.bcf
     
     plink2 \
