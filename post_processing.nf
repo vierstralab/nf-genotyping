@@ -123,6 +123,44 @@ process merge_annotations {
 }
 
 
+process extract_initial_reads {
+    conda params.conda
+    publishDir params.outdir
+
+    output:
+        path name
+
+    script:
+    name = "all.snps.initial_reads.bed.gz"
+    """
+    bcftools query -i'GT=="alt"' \
+        -f '%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT[\t%GT,%AD{0},%AD{1}]\n' \
+        ${params.genotype_file} | bgzip > ${name}
+    """
+}
+
+process convert_to_plink_bed {
+    conda params.conda
+
+
+    output:
+        path("${prefix}.*")
+    
+    script:
+    prefix = "plink"
+    """
+     plink2 --make-bed \
+        --output-chr chrM \
+        --vcf ${params.genotype_file} \
+        --keep-allele-order \
+        --snps-only \
+        --allow-extra-chr \
+        --out ${prefix}
+    """
+}
+
+
+
 workflow mutationRates {
     take:
         data
@@ -151,26 +189,13 @@ workflow {
     )
 }
 
-process extract_initial_reads {
-    conda params.conda
-    publishDir params.outdir
-
-    output:
-        path name
-
-    script:
-    name = "all.snps.initial_reads.bed.gz"
-    """
-    bcftools query -i'GT=="alt"' \
-        -f '%CHROM\t%POS0\t%POS\t%ID\t%REF\t%ALT[\t%GT,%AD{0},%AD{1}]\n' \
-        ${params.genotype_file} | bgzip > ${name}
-    """
-}
-
 workflow extractInitialReadsRound1 {
     extract_initial_reads()
 }
 
+workflow convertToPlinkBed {
+    convert_to_plink_bed()
+}
 
 
 // DEFUNC
