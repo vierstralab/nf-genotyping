@@ -142,18 +142,29 @@ process extract_initial_reads {
 process convert_to_plink_bed {
     conda params.conda
     publishDir "${params.outdir}/plink"
+    scratch true
+
     output:
         path("${prefix}.*")
     
     script:
-    prefix = "plink"
+    prefix = "plink.no_rsid"
     """
-     plink2 --make-bed \
-        --output-chr chrM \
-        --vcf ${params.genotype_file} \
+    bcftools view -s \$1 ${params.genotype_file} \
+        | bcftools norm --threads 8 -m-any \
+            --check-ref w -f /home/jvierstra/data/1k_genomes/GRCh38_full_analysis_set_plus_decoy_hla.fa \
+        | bcftools annotate --threads 8 -x ID -I  +'%CHROM:%POS:%REF:%ALT' - \
+        | bcftools norm --threads 8 -Ob --rm-dup both - \
+        > no_rsid.bcf
+    
+    plink2 \
+        --import-bcf no_rsid.bcf \
         --keep-allele-order \
-        --snps-only \
+        --set-all-var-ids @: \
+        --const-fid \
         --allow-extra-chr \
+        --split-x b38 no-fail \
+        --make-bed \
         --out ${prefix}
     """
 }
