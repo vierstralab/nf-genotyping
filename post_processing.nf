@@ -141,8 +141,7 @@ process extract_initial_reads {
 
 process convert_to_plink_bed {
     conda params.conda
-
-
+    publishDir "${params.outdir}/plink"
     output:
         path("${prefix}.*")
     
@@ -158,7 +157,6 @@ process convert_to_plink_bed {
         --out ${prefix}
     """
 }
-
 
 
 workflow mutationRates {
