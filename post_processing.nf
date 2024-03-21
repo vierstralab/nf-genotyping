@@ -142,7 +142,6 @@ process extract_initial_reads {
 process convert_to_plink_bed {
     conda params.conda
     publishDir "${params.outdir}/plink"
-    scratch true
     cpus 8
 
     output:
@@ -151,7 +150,7 @@ process convert_to_plink_bed {
     script:
     prefix = "plink.no_rsid"
     """
-    bcftools view -r \$(printf "chr%s," {1..22} | sed 's/,\$//') ${params.genotype_file} \
+    bcftools view ${params.genotype_file} \
         | bcftools norm --threads ${task.cpus} -m-any \
             --check-ref w -f /home/jvierstra/data/1k_genomes/GRCh38_full_analysis_set_plus_decoy_hla.fa \
         | bcftools annotate --threads ${task.cpus} -x ID -I  +'%CHROM:%POS:%REF:%ALT' - \
@@ -159,10 +158,11 @@ process convert_to_plink_bed {
         > no_rsid.bcf
     
     plink2 \
-        --import-bcf no_rsid.bcf \
+        --bcf no_rsid.bcf \
         --keep-allele-order \
         --set-all-var-ids @: \
         --const-fid \
+        --autosome \
         --allow-extra-chr \
         --split-x b38 no-fail \
         --make-bed \
