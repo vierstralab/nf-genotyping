@@ -157,7 +157,7 @@ process convert_to_plink_bed {
         | bcftools norm --threads ${task.cpus} -Ob --rm-dup both - \
         > no_rsid.bcf
     
-    plink2 \
+    plink \
         --bcf no_rsid.bcf \
         --keep-allele-order \
         --set-all-var-ids @: \

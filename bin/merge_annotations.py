@@ -75,8 +75,10 @@ def get_mutation_stats(df, window_size):
 
     initial_fwd = (df["ref"] + '/' + df["alt"]).isin(fwd_mutations)
     df['fwd'] = initial_fwd & palindrome_orient
+
+    
     fwd_sub = np.where(
-        df['fwd'],
+        (df["ref"] + '/' + df["alt"]).isin(fwd_mutations),
         df["ref"] + '/' + df["alt"],
         df["ref"].map(comp) + '/' + df["alt"].map(comp)
     )
@@ -103,7 +105,7 @@ def main(unique_snps, context, mutation_rates, window_size):
     result = get_mutation_stats(result, window_size)
     result['cpg'] = (
         (
-            (result['sub'] != 'A/T') 
+            (result['sub'] != 'T/A') 
             & (result[f'signature{window_size}'].str.contains('\]G'))
         ) | (
             (result['sub'] == 'C/G') 
