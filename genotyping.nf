@@ -288,8 +288,8 @@ workflow {
 		| splitCsv(header:true, sep:'\t')
 		| map(row -> tuple(
                 row.indiv_id,
-                file(row.filtered_alignments_bam),
-                file(row?.bam_index ?: "${row.filtered_alignments_bam}.crai")
+                file(row.cram_file),
+                file(row?.cram_index ?: "${row.cram_file}.crai")
             )
         )
 		| filter { !it[0].isEmpty() }
