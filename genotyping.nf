@@ -265,8 +265,10 @@ workflow genotyping {
 	main:
 		merged_bamfiles = bam_files
             | merge_bamfiles
-			| flatMap(it -> it.toString())
+            | flatten()
+			| map(it -> it.toString())
             | collectFile(name: 'bam_list.txt', newLine: true)
+            | view()
 
 		genome_chunks = create_genome_chunks()
 			| flatMap(n -> n.split())
