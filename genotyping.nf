@@ -269,6 +269,8 @@ workflow genotyping {
             | merge_bamfiles
 			| unique()
 			| collect(flat: true, sort: true)
+            | collectFile(name: 'bam_list.txt', newLine: true)
+            | view()
 
 		genome_chunks = create_genome_chunks()
 			| flatMap(n -> n.split())
@@ -293,7 +295,6 @@ workflow {
             )
         )
 		| filter { !it[0].isEmpty() }
-		| set_key_for_group_tuple
 		| groupTuple()
 		| genotyping
 }
