@@ -275,7 +275,7 @@ workflow genotyping {
 		merged_bamfiles = bam_files
             | merge_bamfiles
             | flatten()
-			| map(it -> it.toString())
+			| map(it -> it.toString()) // Get the full path to the file
             | collectFile(name: 'bam_list.txt', newLine: true)
 
 		genome_chunks = create_genome_chunks()
