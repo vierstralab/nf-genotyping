@@ -72,7 +72,7 @@ process call_genotypes {
 	cpus 2
 
 	input:
-	    tuple val(region), path("filelist.txt")
+	    tuple val(region), path("all_filelist.txt")
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -83,7 +83,8 @@ process call_genotypes {
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-	cat filelist.txt | grep -v .crai | xargs -I file basename file | cut -d"." -f1 > samples.txt
+    cat all_filelist.txt | grep -v '.crai' > filelist.txt
+	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
 		--regions ${region} \
