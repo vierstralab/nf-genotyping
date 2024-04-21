@@ -72,7 +72,7 @@ process call_genotypes {
 	cpus 2
 
 	input:
-	    each region, path("filelist.txt")
+	    tuple val(region), path("filelist.txt")
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
