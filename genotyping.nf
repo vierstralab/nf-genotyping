@@ -295,7 +295,7 @@ workflow {
             )
         )
 		| filter { !it[0].isEmpty() }
-        | set_key_for_group_tuple()
+        | set_key_for_group_tuple
 		| groupTuple()
 		| genotyping
 }
