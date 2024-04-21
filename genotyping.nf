@@ -52,15 +52,23 @@ process create_genome_chunks {
 	script:
 	"""
 	cat ${params.genome_chrom_sizes} \
-	| grep -v chrX | grep -v chrY | grep -v chrM | grep -v _random | grep -v _alt | grep -v chrUn \
-  	| awk -v step=${params.chunksize} -v OFS="\t" \
-		'{ \
-			for(i=step; i<=\$2; i+=step) { \
-				print \$1"\t"i-step+1"\t"i; \
-			} \
-			print \$1"\t"i-step+1"\t"\$2; \
-		}' > genome_chunks.bed
-	bedtools subtract -a genome_chunks.bed -b ${params.encode_blacklist_regions} | awk '{ print \$1":"\$2"-"\$3 }'
+	    | grep -v chrX \
+        | grep -v chrY \
+        | grep -v chrM \
+        | grep -v _random \
+        | grep -v _alt \
+        | grep -v chrUn \
+        | awk -v step=${params.chunksize} -v OFS="\t" \
+            '{ \
+                for(i=step; i<=\$2; i+=step) { \
+                    print \$1"\t"i-step+1"\t"i; \
+                } \
+                print \$1"\t"i-step+1"\t"\$2; \
+            }' > genome_chunks.bed
+	bedtools subtract \
+        -a genome_chunks.bed \
+        -b ${params.encode_blacklist_regions} \
+        | awk '{ print \$1":"\$2"-"\$3 }'
 	"""
 } 
 
@@ -72,7 +80,7 @@ process call_genotypes {
 	cpus 2
 
 	input:
-	    tuple val(region), path("all_filelist.txt")
+	    tuple val(region), path(bamlist)
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
@@ -83,7 +91,7 @@ process call_genotypes {
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-    cat all_filelist.txt | grep -v '.crai' > filelist.txt
+    cat ${bamlist} | grep -v '.crai' > filelist.txt
 	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
