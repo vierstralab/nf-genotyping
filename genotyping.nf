@@ -72,19 +72,17 @@ process call_genotypes {
 	cpus 2
 
 	input:
-	    each region 
-		val bams_and_index
+	    each region, path("filelist.txt")
 
 	output:
 		tuple path("${region}.filtered.annotated.vcf.gz"), path("${region}.filtered.annotated.vcf.gz.csi")
 
 	script:
-	bams_paths = bams_and_index.join('\n')
 	"""
 	# Workaround
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
-	echo "${bams_paths}" | grep -v ".crai" > filelist.txt
+
 	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
@@ -274,8 +272,9 @@ workflow genotyping {
 
 		genome_chunks = create_genome_chunks()
 			| flatMap(n -> n.split())
+            | combine(merged_bamfiles)
 
-		merged_vcf = call_genotypes(genome_chunks, merged_bamfiles)
+		merged_vcf = call_genotypes(genome_chunks)
 			| collect(flat: true, sort: true)
 			| merge_vcfs
             | map(it -> tuple(it[0], it[1]))
