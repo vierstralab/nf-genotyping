@@ -83,7 +83,7 @@ process call_genotypes {
 	export OMP_NUM_THREADS=1
 	export USE_SIMPLE_THREADED_LEVEL3=1
 
-	cat filelist.txt | xargs -I file basename file | cut -d"." -f1 > samples.txt
+	cat filelist.txt | grep -v .crai | xargs -I file basename file | cut -d"." -f1 > samples.txt
 
 	bcftools mpileup \
 		--regions ${region} \
