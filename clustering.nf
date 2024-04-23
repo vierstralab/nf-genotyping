@@ -8,6 +8,7 @@ process cluster_indivs {
     publishDir "${params.outdir}/clustering"
     conda params.conda
     scratch true
+    label "highmem"
 
     input:
         path genotype_file
