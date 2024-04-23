@@ -19,9 +19,9 @@ def visualize_clustering(mat, linkage, out_path):
     plt.savefig(out_path)
     plt.close(fig)
 
-def get_clusters(mat):
+def get_clusters(mat, max_dist=0.1):
     linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
-    cl = hierarchy.fcluster(linkage, 0.1, criterion='distance')
+    cl = hierarchy.fcluster(linkage, max_dist, criterion='distance')
 
     clusters = pd.DataFrame({'indiv_id': mat.index, 'cluster_id': cl})
 
