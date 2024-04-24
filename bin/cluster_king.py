@@ -33,8 +33,8 @@ def get_clusters(mat, max_dist=0.1):
     return clusters, linkage, cl
 
 
-def main(mat, stats, genotyping_meta, outdir, min_hets=100):
-    good_ids = stats.query(f'nHets >= {min_hets}')['indiv_id'].tolist()
+def main(mat, stats, genotyping_meta, outdir, min_variants=1000):
+    good_ids = stats.query(f'(nHets + nNonRefHom) >= {min_variants}')['indiv_id'].tolist()
     clusters, linkage, _ = get_clusters(mat.loc[good_ids, good_ids])
 
     genotyping_meta = genotyping_meta.merge(clusters[['indiv_id', 'new_id']], how='left')
@@ -101,8 +101,11 @@ if __name__ == '__main__':
     parser.add_argument('--outpath', type=str, 
 						help="Path to directory to save updated metafile and visualizations", default='./')
     
-    parser.add_argument('--min-hets',
-						help="Minimal number of heterozygotes per sample to cluster", type=int, default=100)
+    parser.add_argument('--min-variants',
+        help="Minimal number of variants (Het + NonRefHom) per sample to include in clustering",
+        type=int,
+        default=1000
+    )
     
 
     args = parser.parse_args()

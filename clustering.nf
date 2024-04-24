@@ -28,7 +28,7 @@ process cluster_indivs {
         snps.clustering \
         ${params.samples_file} \
         ${bcftools_stats} \
-        --min-hets ${params.min_hets} \
+        --min-variants ${params.min_variants} \
         --outpath ./
     """
 }
