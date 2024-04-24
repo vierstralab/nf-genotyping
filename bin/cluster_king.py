@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 from scipy.cluster import hierarchy
 import matplotlib.pyplot as plt
+import subprocess
 
 
 def visualize_clustering(mat, linkage, out_path):
@@ -55,11 +56,30 @@ def main(mat, stats, genotyping_meta, outdir, min_hets=100):
 
 
 def read_genotype_stats(bcftools_stats):
-    stats = pd.read_table(bcftools_stats)
-    stats = stats.iloc[:,2:]
-    stats.columns = stats.columns.str.replace(r"(\[.*\])","", regex=True)
+    # Construct the grep command to filter the desired lines directly
+    cmd = f"grep 'PSC' {bcftools_stats} | tail -n+2"
+    
+    # Run the command and capture the output
+    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+
+    # Check for errors in stderr to handle cases where the command fails
+    if stderr:
+        print(f"Error: {stderr.decode()}")
+        return None
+    
+    # Use the StringIO to simulate a file object from the output bytes
+    from io import StringIO
+    output = StringIO(stdout.decode())
+
+    # Read the output directly into a pandas DataFrame
+    stats = pd.read_table(output)
+    stats = stats.iloc[:, 2:]
+    stats.columns = stats.columns.str.replace(r"(\[.*\])", "", regex=True)
     stats.rename(columns={'sample': 'indiv_id'}, inplace=True)
+    
     return stats
+
 
 
 def read_plink(plink_path):

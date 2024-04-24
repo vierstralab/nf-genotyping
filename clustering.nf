@@ -19,8 +19,6 @@ process cluster_indivs {
 
     script:
     """
-    grep "PSC" ${bcftools_stats} | tail -n+2 > stats.txt
-
     plink2 --allow-extra-chr \
         --make-king square \
         --out snps.clustering \
@@ -29,7 +27,7 @@ process cluster_indivs {
     python3 $moduleDir/bin/cluster_king.py \
         snps.clustering \
         ${params.samples_file} \
-        stats.txt \
+        ${bcftools_stats} \
         --min-hets ${params.min_hets} \
         --outpath ./
     """
