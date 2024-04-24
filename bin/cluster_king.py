@@ -114,5 +114,5 @@ if __name__ == '__main__':
     
     metadata = pd.read_table(args.metadata, dtype={'indiv_id': str})
     
-    main(matrix, stats, metadata, args.outpath, min_hets=args.min_hets)
+    main(matrix, stats, metadata, args.outpath, min_variants=args.min_variants)
     
