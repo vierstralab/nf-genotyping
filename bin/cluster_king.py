@@ -93,10 +93,8 @@ if __name__ == '__main__':
     
     parser.add_argument('--min-variants',
         help="Minimal number of variants (Het + NonRefHom) per sample to include in clustering",
-        type=int,
-        default=1000
+        type=int, default=1000
     )
-    
 
     args = parser.parse_args()
     matrix = read_plink(args.plink)
