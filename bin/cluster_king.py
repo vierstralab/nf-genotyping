@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import subprocess
 
 
-def visualize_clustering(mat, linkage, out_path):
+def visualize_clustering(mat, linkage):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
     dendro = hierarchy.dendrogram(linkage, no_plot=False, ax=ax1)
     g = sns.heatmap(mat.iloc[dendro['leaves'],dendro['leaves']], cmap='Blues',
@@ -17,8 +17,7 @@ def visualize_clustering(mat, linkage, out_path):
         g.spines[l].set_visible(True)
         g.spines[l].set_color('k')
     
-    plt.savefig(out_path)
-    plt.close(fig)
+    return fig, (ax1, ax2)
 
 def get_clusters(mat, max_dist=0.1):
     linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
@@ -33,26 +32,17 @@ def get_clusters(mat, max_dist=0.1):
     return clusters, linkage, cl
 
 
-def main(mat, stats, genotyping_meta, outdir, min_variants=1000):
+def main(mat, stats, genotyping_meta, min_variants=1000):
     good_ids = stats.query(f'(nHets + nNonRefHom) >= {min_variants}')['indiv_id'].tolist()
     clusters, linkage, _ = get_clusters(mat.loc[good_ids, good_ids])
 
-    genotyping_meta = genotyping_meta.merge(clusters[['indiv_id', 'new_id']], how='left')
-
-    genotyping_meta.rename(
+    result = genotyping_meta.merge(
+        clusters[['indiv_id', 'new_id']],
+        how='left'
+    ).rename(
         columns={'indiv_id': 'old_indiv_id', 'new_id': 'indiv_id'},
-        inplace=True
     )
-    
-    genotyping_meta.to_csv(
-        os.path.join(outdir, "metadata.clustered.tsv"),
-        index=False, sep='\t'
-    )
-
-    visualize_clustering(
-        mat, linkage,
-        os.path.join(outdir, "clustering.png")
-    )
+    return mat, linkage, result
 
 
 def read_genotype_stats(bcftools_stats):
@@ -81,7 +71,6 @@ def read_genotype_stats(bcftools_stats):
     return stats
 
 
-
 def read_plink(plink_path):
     indivs = np.loadtxt(f'{plink_path}.king.id', skiprows=0, dtype=str)
     rel_mat = np.loadtxt(f'{plink_path}.king')
@@ -89,6 +78,7 @@ def read_plink(plink_path):
     mat[mat < 0.4] = 0
     mat[np.isnan(mat)] = 0
     return mat
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Count tags by allele")
@@ -114,5 +104,18 @@ if __name__ == '__main__':
     
     metadata = pd.read_table(args.metadata, dtype={'indiv_id': str})
     
-    main(matrix, stats, metadata, args.outpath, min_variants=args.min_variants)
+    mat, linkage, gen_meta = main(matrix, stats, metadata, min_variants=args.min_variants)
+
+    gen_meta.to_csv(
+        f"{args.outpath}/metadata.clustered.tsv",
+        index=False,
+        sep='\t'
+    )
+
+    fig = visualize_clustering(
+        mat, linkage,   
+    )
+    fig.savefig(f"{args.outpath}/clustering.pdf", bbox_inches='tight', transparent=True)
+    plt.close(fig)
+
     
