@@ -56,7 +56,7 @@ def read_genotype_stats(bcftools_stats):
     # Check for errors in stderr to handle cases where the command fails
     if stderr:
         print(f"Error: {stderr.decode()}")
-        return None
+        exit(1)
     
     # Use the StringIO to simulate a file object from the output bytes
     from io import StringIO
