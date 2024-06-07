@@ -108,16 +108,10 @@ process scan_with_moods {
         -m "${pwm_path}" \
         -o moods.log
 
-    
-    cat moods.log | awk '{print \$1}' > chroms.txt
 
     cat moods.log \
-        | cut -d";" -f2- \
-        | sed 's/;\$//g' \
-        | awk -v FS=";" -v OFS="\t" \
-            '{ print \$2, \$2+length(\$5), \$1, \$4, \$3, \$5; }' \
-        | sed 's/".pfm"/""/g' \
-        | paste chroms.txt - \
+        | awk -F";" -v OFS="\t" \
+            '{ print \$1, \$3, \$3+length(\$6), \$2, \$5, \$4, \$6; }' \
         | sort-bed - \
         | bgzip -c \
         > ${name}
