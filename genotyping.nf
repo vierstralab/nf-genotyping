@@ -192,7 +192,7 @@ process annotate_vcf {
     label "highmem"
 
 	input:
-		tuple path("snps_vcf.vcf"), path("snps_vcf.vcf.csi")
+		tuple path("snps_vcf.gz.vcf"), path("snps_vcf.vcf.gz.csi")
 
 	output:
 		tuple path(name), path("${name}.csi")
