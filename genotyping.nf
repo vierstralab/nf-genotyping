@@ -192,7 +192,7 @@ process annotate_vcf {
     label "highmem"
 
 	input:
-		tuple path("snps_vcf.gz.vcf"), path("snps_vcf.vcf.gz.csi")
+		tuple path("snps_vcf.vcf.gz"), path("snps_vcf.vcf.gz.csi")
 
 	output:
 		tuple path(name), path("${name}.csi")
@@ -206,7 +206,7 @@ process annotate_vcf {
 	
 	# Get SNPs in BED-format
 	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" \
-		snps_vcf.vcf | sort-bed - > all.filtered.snps.bed
+		snps_vcf.vcf.gz | sort-bed - > all.filtered.snps.bed
 
 	# Get ancestral allele from FASTA file and make a TABIX file
 	faidx -i chromsizes ${params.genome_ancestral_fasta_file} | cut -f1 > chroms.txt
@@ -240,7 +240,7 @@ process annotate_vcf {
 		--pair-logic exact \
 		-a all.filtered.snps.annotations.bed.gz \
 		-c CHROM,BEG,END,-,ALT,INFO/AAF,INFO/RAF,INFO/AA \
-		snps_vcf.vcf \
+		snps_vcf.vcf.gz \
 	> ${name}
 	
 	bcftools index ${name}
