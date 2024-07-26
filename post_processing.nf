@@ -2,7 +2,7 @@
 nextflow.enable.dsl = 2
 
 params.conda = "$moduleDir/environment.yml"
-
+// Add sort-bed - 
 process extract_variants_from_vcf {
     conda params.conda
     
@@ -143,7 +143,7 @@ process genomic_annotations {
 
     conda params.conda
     publishDir params.outdir
-    scratch true
+    //scratch true
 
     input:
         path variants
@@ -165,7 +165,8 @@ process genomic_annotations {
         ${params.gencode} \
         chrom_sizes.bed
 
-    paste variants.no_header.bed gencode_annotations.txt > ${name}
+    echo -e `head -1 variants.no_header.bed`\t`cat gencodeAnnotations_header.txt` > ${name}
+    paste variants.no_header.bed gencode_annotations.txt >> ${name}
     """
 }
 
