@@ -110,7 +110,7 @@ process distance_to_dhs {
     tail -n+2 ${params.dhs_masterlist} \
         | cut -f1-4  > dhs_masterlist.bed
     
-    echo -e "#chr\tstart\tend\tID\tref\talt\tindex_chr\tindex_start\tindex_end\tdhs_id\tdistance" > ${genotyped_dist}
+    echo -e "#chr\tstart\tend\tID\tref\talt\tRAF\tAAF\tindex_chr\tindex_start\tindex_end\tdhs_id\tdistance" > ${genotyped_dist}
     tail -n+2 ${variants} \
         | closest-features \
             --closest \
