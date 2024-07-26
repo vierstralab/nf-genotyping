@@ -160,7 +160,7 @@ process genomic_annotations {
     
     tail -n+2 ${variants} > variants.no_header.bed
     
-    bash $moduleDir/bin/annotations/gencodeAnnotations.sh \
+    bash $moduleDir/bin/gencodeAnnotations.sh \
         variants.no_header.bed \
         ${params.gencode} \
         chrom_sizes.bed
