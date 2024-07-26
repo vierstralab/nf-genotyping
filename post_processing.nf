@@ -179,6 +179,7 @@ process merge_annotations {
         path unique_snps
         path context
         path mutation_rates
+        path genomic_annotations
     
     output:
         path name
@@ -190,6 +191,7 @@ process merge_annotations {
         ${unique_snps} \
         ${context} \
         ${mutation_rates} \
+        ${genomic_annotations} \
         1 \
         tmp.bed
     
@@ -231,7 +233,8 @@ workflow {
     merge_annotations(
         annotate_with_phenotypes.out, 
         extract_context.out,
-        mutationRates.out
+        mutationRates.out,
+        genomic_annotations.out
     )
 }
 

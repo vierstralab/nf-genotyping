@@ -98,8 +98,9 @@ def get_mutation_stats(df, window_size):
     return df
 
 
-def main(unique_snps, context, mutation_rates, window_size):
+def main(unique_snps, context, mutation_rates, genomic_annotation, window_size):
     result = unique_snps.merge(context)
+    result = result.merge(genomic_annotation)
     assert len(result.index) == len(unique_snps.index)
 
     result = get_mutation_stats(result, window_size)
@@ -122,6 +123,9 @@ if __name__ == '__main__':
     unique_snps = pd.read_table(sys.argv[1])
     context = pd.read_table(sys.argv[2])
     mutation_rates = pd.read_table(sys.argv[3])
-    window_size = int(sys.argv[4])
+    mutation_rates = pd.read_table(sys.argv[3])
+    genomic_annotations = pd.read_table(sys.argv[4])
+    window_size = int(sys.argv[5])
     
-    main(unique_snps, context, mutation_rates, window_size).to_csv(sys.argv[5], sep='\t', index=False)
+    main(unique_snps, context, mutation_rates, genomic_annotations,
+         window_size=window_size).to_csv(sys.argv[6], sep='\t', index=False)
