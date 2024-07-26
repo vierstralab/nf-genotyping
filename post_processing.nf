@@ -110,15 +110,16 @@ process distance_to_dhs {
     tail -n+2  ${params.dhs_masterlist} \
         | cut -f1-4  > dhs_masterlist.bed
     
+    echo -e "#chr\tstart\tend\tID\tref\talt\tindex_chr\tindex_start\tindex_end\tdhs_id" > ${genotyped_dist}
     closest-features \
         --closest \
         --dist \
         --delim '\t' \
         ${variants} \
         dhs_masterlist.bed \
-        > ${genotyped_dist}
+        >> ${genotyped_dist}
     
-    echo -e "#chr\tstart\tend\tID\tref\talt\ttopmed\tmaf\tdistance" > ${name}
+    echo -e "#chr\tstart\tend\tID\tref\talt\ttopmed\tmaf\tindex_start\tindex_end\tdhs_id\tdistance\tis_genotyped" > ${name}
     
     closest-features \
         --closest \
@@ -132,7 +133,7 @@ process distance_to_dhs {
             --indicator \
             - \
             ${variants} \
-        > ${name}
+        >> ${name}
     """
 }
 
