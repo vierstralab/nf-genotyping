@@ -143,7 +143,7 @@ process genomic_annotations {
 
     conda params.conda
     publishDir params.outdir
-    //scratch true
+    scratch true
 
     input:
         path variants
@@ -158,13 +158,15 @@ process genomic_annotations {
         | awk -v OFS='\t' '{ print \$1,0,\$2 }' \
         > chrom_sizes.bed
     
-    tail -n+2 ${variants} | sort-bed - > variants.no_header.bed
+    tail -n+2 ${variants} \
+        | sort-bed - > variants.no_header.bed
     
     bash $moduleDir/bin/gencodeAnnotations.sh \
         variants.no_header.bed \
         ${params.gencode} \
         chrom_sizes.bed
 
+    # Pasting all together
     paste <(head -1 ${variants}) <(cat gencodeAnnotations_header.txt) > ${name}
     paste variants.no_header.bed gencode_annotations.txt >> ${name}
     """
