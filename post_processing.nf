@@ -107,7 +107,7 @@ process distance_to_dhs {
     genotyped_dist = "genotyped.distance_to_dhs.bed"
     name = "dbsnp_common.distance_to_dhs.bed"
     """
-    tail -n+2  ${params.dhs_masterlist} \
+    tail -n+2 ${params.dhs_masterlist} \
         | cut -f1-4  > dhs_masterlist.bed
     
     echo -e "#chr\tstart\tend\tID\tref\talt\tindex_chr\tindex_start\tindex_end\tdhs_id" > ${genotyped_dist}
