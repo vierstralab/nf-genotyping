@@ -92,11 +92,44 @@ process annotate_with_phenotypes {
     """
 }
 
+process distance_to_dhs {
+
+    input:
+        path variants
+    
+    
+    script:
+    genotyped_dist = "genotyped.distance_to_dhs.bed"
+    name = "dbsnp_common.distance_to_dhs.bed"
+    """
+    cut -f1-4 ${params.dhs_masterlist} \
+        | closest-features \
+        --closest \
+        --dist \
+        --delim '\t' \
+        ${variants} \
+        - > ${genotyped_dist}
+    
+    cut -f1-4 ${params.dhs_masterlist} \
+        | closest-features \
+            --closest \
+            --dist \
+            --delim '\t' \
+            ${dbsnp_common_bed} \
+            - \
+        | bedmap \
+            --echo \
+            --indicator \
+            - \
+            ${variants} \
+        > ${name}
+    """
+}
 
 process merge_annotations {
     conda params.conda
     publishDir params.outdir
-    //scratch true
+    scratch true
 
     input:
         path unique_snps
@@ -123,6 +156,37 @@ process merge_annotations {
 }
 
 
+workflow mutationRates {
+    take:
+        data
+    main:
+        out = Channel.fromPath("${params.vcfs_dir}/*.vcf.gz")
+            | combine(data)
+            | process_mutation_rates
+            | collectFile(
+                name: "mut_rates.annotation.bed",
+                skip: 1,
+                keepHeader: true
+            )
+    emit:
+        out
+}
+
+
+// ------------ Entry workflows -------------------
+workflow {
+    extract_variants_from_vcf()
+        | (annotate_with_phenotypes & extract_context & mutationRates & distance_to_dhs)
+    
+    merge_annotations(
+        annotate_with_phenotypes.out, 
+        extract_context.out,
+        mutationRates.out
+    )
+}
+
+
+// Extracts the initial reads for all SNPs. This is used for WASP before/after figure
 process extract_initial_reads {
     conda params.conda
     publishDir params.outdir
@@ -139,6 +203,13 @@ process extract_initial_reads {
     """
 }
 
+
+workflow extractInitialReadsRound1 {
+    extract_initial_reads()
+}
+
+
+// CONVERT TO PLINK BED
 process convert_to_plink_bed {
     conda params.conda
     publishDir "${params.outdir}/plink"
@@ -168,39 +239,6 @@ process convert_to_plink_bed {
         --make-bed \
         --out ${prefix}
     """
-}
-
-
-workflow mutationRates {
-    take:
-        data
-    main:
-        out = Channel.fromPath("${params.vcfs_dir}/*.vcf.gz")
-            | combine(data)
-            | process_mutation_rates
-            | collectFile(
-                name: "mut_rates.annotation.bed",
-                skip: 1,
-                keepHeader: true
-            )
-    emit:
-        out
-}
-
-// ------------ Entry workflows -------------------
-workflow {
-    extract_variants_from_vcf()
-        | (annotate_with_phenotypes & extract_context & mutationRates)
-    
-    merge_annotations(
-        annotate_with_phenotypes.out, 
-        extract_context.out,
-        mutationRates.out
-    )
-}
-
-workflow extractInitialReadsRound1 {
-    extract_initial_reads()
 }
 
 workflow convertToPlinkBed {
