@@ -139,6 +139,36 @@ process distance_to_dhs {
     """
 }
 
+process genomic_annotations {
+
+    conda params.conda
+    publishDir params.outdir
+    scratch true
+
+    input:
+        path variants
+    
+    output:
+        path name
+
+    script:
+    name = "snvs.genomic_annotations.bed"
+    """
+    cat ${params.chrom_sizes} \
+        | awk -v OFS='\t' '{ print \$1,0,\$2 }' \
+        > chrom_sizes.bed
+    
+    tail -n+2 ${variants} > variants.no_header.bed
+    
+    bash $moduleDir/bin/annotations/gencodeAnnotations.sh \
+        variants.no_header.bed \
+        ${params.gencode} \
+        chrom_sizes.bed
+
+    paste variants.no_header.bed gencode_annotations.txt > ${name}
+    """
+}
+
 process merge_annotations {
     conda params.conda
     publishDir params.outdir
