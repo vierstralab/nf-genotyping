@@ -219,7 +219,13 @@ workflow mutationRates {
 // ------------ Entry workflows -------------------
 workflow {
     extract_variants_from_vcf()
-        | (annotate_with_phenotypes & extract_context & mutationRates & distance_to_dhs)
+        | (
+            annotate_with_phenotypes 
+            & extract_context 
+            & mutationRates 
+            & distance_to_dhs
+            & genomic_annotations
+        )
     
     merge_annotations(
         annotate_with_phenotypes.out, 
