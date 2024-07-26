@@ -154,7 +154,7 @@ process genomic_annotations {
     script:
     name = "snvs.genomic_annotations.bed"
     """
-    cat ${params.chrom_sizes} \
+    cat ${params.genome_chrom_sizes} \
         | awk -v OFS='\t' '{ print \$1,0,\$2 }' \
         > chrom_sizes.bed
     
