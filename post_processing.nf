@@ -95,6 +95,7 @@ process annotate_with_phenotypes {
 process distance_to_dhs {
     conda params.conda
     publishDir params.outdir
+    label "highmem"
 
     input:
         path variants
@@ -106,22 +107,27 @@ process distance_to_dhs {
     genotyped_dist = "genotyped.distance_to_dhs.bed"
     name = "dbsnp_common.distance_to_dhs.bed"
     """
-    cut -f1-4 ${params.dhs_masterlist} \
-        | closest-features \
+    tail -n+2  ${params.dhs_masterlist} \
+        | cut -f1-4  > dhs_masterlist.bed
+    
+    closest-features \
         --closest \
         --dist \
         --delim '\t' \
         ${variants} \
-        - > ${genotyped_dist}
+        dhs_masterlist.bed \
+        > ${genotyped_dist}
     
-    cut -f1-4 ${params.dhs_masterlist} \
-        | closest-features \
-            --closest \
-            --dist \
-            --delim '\t' \
-            ${params.dbsnp_common_bed} \
-            - \
+    echo -e "#chr\tstart\tend\tID\tref\talt\ttopmed\tmaf\tdistance" > ${name}
+    
+    closest-features \
+        --closest \
+        --dist \
+        --delim '\t' \
+        ${params.dbsnp_common_bed} \
+        dhs_masterlist.bed \
         | bedmap \
+            --delim '\t' \
             --echo \
             --indicator \
             - \
