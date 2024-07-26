@@ -1,1 +1,1 @@
-nf-index/bin/annotations/gencodeAnnotations.sh
+pipelines/nf-index/bin/annotations/gencodeAnnotations.sh
