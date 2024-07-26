@@ -110,7 +110,7 @@ process distance_to_dhs {
     tail -n+2 ${params.dhs_masterlist} \
         | cut -f1-4  > dhs_masterlist.bed
     
-    echo -e "#chr\tstart\tend\tID\tref\talt\tRAF\tAAF\tindex_chr\tindex_start\tindex_end\tdhs_id\tdistance" > ${genotyped_dist}
+    echo -e "#chr\tstart\tend\tID\tref\talt\tRAF\tAAF\tAA\tindex_chr\tindex_start\tindex_end\tdhs_id\tdistance" > ${genotyped_dist}
     tail -n+2 ${variants} \
         | closest-features \
             --closest \
@@ -158,7 +158,7 @@ process genomic_annotations {
         | awk -v OFS='\t' '{ print \$1,0,\$2 }' \
         > chrom_sizes.bed
     
-    tail -n+2 ${variants} > variants.no_header.bed
+    tail -n+2 ${variants} | sort-bed - > variants.no_header.bed
     
     bash $moduleDir/bin/gencodeAnnotations.sh \
         variants.no_header.bed \
