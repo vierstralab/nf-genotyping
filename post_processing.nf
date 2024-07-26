@@ -93,11 +93,15 @@ process annotate_with_phenotypes {
 }
 
 process distance_to_dhs {
+    conda params.conda
+    publishDir params.outdir
 
     input:
         path variants
     
-    
+    output:
+        tuple path(genotyped_dist), path(name)
+
     script:
     genotyped_dist = "genotyped.distance_to_dhs.bed"
     name = "dbsnp_common.distance_to_dhs.bed"
@@ -115,7 +119,7 @@ process distance_to_dhs {
             --closest \
             --dist \
             --delim '\t' \
-            ${dbsnp_common_bed} \
+            ${params.dbsnp_common_bed} \
             - \
         | bedmap \
             --echo \
