@@ -1,7 +1,3 @@
-[submodule "nf-index"]
-	path = pipelines/nf-index
-	url = https://github.com/wishabc/nf-index
-    branch = main
 [submodule "pipelines/nf-index"]
 	path = pipelines/nf-index
 	url = https://github.com/wishabc/nf-index
