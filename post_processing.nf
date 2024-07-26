@@ -165,7 +165,7 @@ process genomic_annotations {
         ${params.gencode} \
         chrom_sizes.bed
 
-    echo -e `head -1 variants.no_header.bed`\t`cat gencodeAnnotations_header.txt` > ${name}
+    paste <(head -1 ${variants}) <(cat gencodeAnnotations_header.txt) > ${name}
     paste variants.no_header.bed gencode_annotations.txt >> ${name}
     """
 }
