@@ -4,7 +4,7 @@ import glob
 import sys
 from tqdm import tqdm
 from functools import reduce
-
+import numpy as np
 
 tqdm.pandas()
 phenotype_db_names = ['grasp', 'ebi', 'clinvar', 'phewas', 'finemapping']
@@ -158,7 +158,7 @@ def arr_to_str(arr):
     non_nans = [remove_phen_name_punctuation(x) for x in arr if x is not None]
     if len(non_nans) == 0:
         return ""
-    return '|'.join(sorted(non_nans))
+    return '|'.join(sorted(np.unique(non_nans)))
 
 
 def remove_phen_name_punctuation(phenotype_name):
