@@ -273,6 +273,7 @@ workflow genotyping {
 		bam_files
 	main:
 		merged_bamfiles = bam_files
+            | groupTuple()
             | merge_bamfiles
             | flatten()
 			| map(it -> it.toString()) // Get the full path to the file
@@ -303,7 +304,6 @@ workflow {
         )
 		| filter { !it[0].isEmpty() }
         | set_key_for_group_tuple
-		| groupTuple()
 		| genotyping
 }
 
