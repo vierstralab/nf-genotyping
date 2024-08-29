@@ -71,11 +71,11 @@ def read_genotype_stats(bcftools_stats):
     return stats
 
 
-def read_plink(plink_path):
+def read_plink(plink_path, clip_cutoff=0.4):
     indivs = np.loadtxt(f'{plink_path}.king.id', skiprows=0, dtype=str)
     rel_mat = np.loadtxt(f'{plink_path}.king')
     mat = pd.DataFrame(rel_mat, index=indivs, columns=indivs)
-    mat[mat < 0.4] = 0
+    mat[mat < clip_cutoff] = 0
     mat[np.isnan(mat)] = 0
     return mat
 
