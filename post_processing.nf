@@ -154,17 +154,13 @@ process genomic_annotations {
     script:
     name = "snvs.genomic_annotations.bed"
     """
-    cat ${params.genome_chrom_sizes} \
-        | awk -v OFS='\t' '{ print \$1,0,\$2 }' \
-        > chrom_sizes.bed
-    
     tail -n+2 ${variants} \
         | sort-bed - > variants.no_header.bed
     
     bash $moduleDir/bin/gencodeAnnotations.sh \
         variants.no_header.bed \
         ${params.gencode} \
-        chrom_sizes.bed
+        ${params.genome_chrom_sizes}
 
     # Pasting all together
     paste <(head -1 ${variants}) <(cat gencodeAnnotations_header.txt) > ${name}
