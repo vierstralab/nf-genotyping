@@ -33,7 +33,7 @@ process merge_bamfiles {
 		samtools index ${name}
 		"""
 	} else {
-        if (bam_files.endsWith(".bam")) {
+        if (bam_files[0].endsWith(".bam")) {
             """
             samtools view -@${task.cpus} \
                 -C \
