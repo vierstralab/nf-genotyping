@@ -16,6 +16,7 @@ process merge_bamfiles {
 
 	conda "${params.conda}"
 	label "medmem"
+    cpus 2
 
 	input:
 		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
@@ -32,11 +33,21 @@ process merge_bamfiles {
 		samtools index ${name}
 		"""
 	} else {
-		
-		"""
-		ln -s ${bam_files} ${name}
-		ln -s ${bam_files}.crai ${name}.crai
-		"""
+        if (bam_files.endsWith(".bam")) {
+            """
+            samtools view -@${task.cpus} \
+                -C \
+                --reference ${params.genome_fasta_file} \
+                -o ${name} \
+                ${bam_files}
+            samtools index ${name}
+            """
+        } else {
+            """
+            ln -s ${bam_files} ${name}
+            ln -s ${bam_files}.crai ${name}.crai
+            """
+        }
 	}
 }
 
