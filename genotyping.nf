@@ -12,7 +12,7 @@ def set_key_for_group_tuple(ch) {
 
 
 process merge_bamfiles {
-	tag "${indiv_id}:${s}:${bam_files[0].extension}"
+	tag "${indiv_id}:${s}:${bam_files.extension}"
 
 	conda "${params.conda}"
 	label "medmem"
