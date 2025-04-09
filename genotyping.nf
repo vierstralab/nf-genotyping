@@ -12,7 +12,7 @@ def set_key_for_group_tuple(ch) {
 
 
 process merge_bamfiles {
-	tag "${indiv_id}:${s}:${bam_files.extension}"
+	tag "${indiv_id}:${s}"
 
 	conda "${params.conda}"
 	label "medmem"
@@ -33,7 +33,7 @@ process merge_bamfiles {
 		samtools index ${name}
 		"""
 	} else {
-        if (bam_files[0].extension == "bam") {
+        if (bam_files.extension == "bam") {
             """
             samtools view -@${task.cpus} \
                 -C \
