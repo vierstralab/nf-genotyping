@@ -15,7 +15,7 @@ process cluster_indivs {
         path bcftools_stats
 
     output:
-        tuple path('metadata.clustered.tsv'), path('snps.clustering.king.id'), path('snps.clustering.king'), path('clustering.png')
+        tuple path('metadata.clustered.tsv'), path('snps.clustering.king.id'), path('snps.clustering.king'), path('clustering.pdf')
 
     script:
     """
