@@ -110,7 +110,7 @@ if __name__ == '__main__':
         sep='\t'
     )
 
-    fig = visualize_clustering(
+    fig, axes = visualize_clustering(
         mat, linkage,   
     )
     fig.savefig(f"{args.outpath}/clustering.pdf", bbox_inches='tight', transparent=True)
