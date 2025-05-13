@@ -89,7 +89,7 @@ process make_iupac_genome {
 process scan_with_moods {
     conda params.conda
     tag "${motif_id}:${genome_type}"
-    scratch true
+    // scratch true
     publishDir "${params.outdir}/moods_scans_${genome_type}", pattern: "${name}"
 
     input:
