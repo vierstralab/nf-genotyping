@@ -111,7 +111,11 @@ process scan_with_moods {
 
     cat moods.log \
         | awk -F";" -v OFS="\t" \
-            '{ print \$1, \$3, \$3+length(\$6), \$2, \$5, \$4, \$6; }' \
+            '{ \
+                split(\$1, a, " "); \
+                chrom = a[1]; \
+                print chrom, \$3, \$3+length(\$6), \$2, \$5, \$4, \$6; \
+            }' \
         | sort-bed - \
         | bgzip -c \
         > ${name}
