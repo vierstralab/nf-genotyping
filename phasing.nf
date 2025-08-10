@@ -1,4 +1,4 @@
-include { set_key_for_group_tuple } from "./post_processing"
+include { set_key_for_group_tuple } from "./genotyping"
 
 process phasing {
     conda '/home/jvierstra/.local/miniconda3/envs/tf-2.13.0'
