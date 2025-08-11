@@ -41,6 +41,34 @@ process phasing {
     """
 }
 
+process merge_bed {
+
+    conda params.conda
+    publishDir "${params.outdir}"
+
+    label "medmem"
+
+    input:
+        path bed_files
+
+    output:
+        tuple path(name), path("${name}.tbi") 
+
+    script:
+    name = "all_phased.bed.gz"
+    """
+    # Keep header from first file
+    (zcat ${bed_files[0]} | head -n 1) || true > merged.bed
+
+    # Concat all, skip headers, and sort with sort-bed
+    zcat ${bed_files} | grep -v '^#' | sort-bed - >> merged.bed
+
+    # Compress and index if needed
+    bgzip -c merged.bed > ${name}
+    tabix ${name}
+    """
+}
+
 
 
 workflow {
@@ -56,4 +84,7 @@ workflow {
         | set_key_for_group_tuple
         | groupTuple()
 		| phasing
+        | map(it -> it[3])
+        | collect(sort: true, flat: true)
+        | merge_bed
 }
