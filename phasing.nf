@@ -2,7 +2,7 @@ include { set_key_for_group_tuple } from "./genotyping"
 
 process phasing {
     conda params.conda
-    publishDir "${params.outdir}/genotypes", pattern: "${prefix}.vcf.gz"
+    publishDir "${params.outdir}/phasing"
     label "medmem"
     // scratch true
 
