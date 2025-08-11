@@ -17,7 +17,7 @@ process phasing {
     bed_name = "${indiv_id}.phased.bed.gz"
     """
     bcftools view -s ${indiv_id} -e 'GT[*]="alt"' \
-        ${params.genotype_file} -O > genotypes.vcf
+        ${params.genotype_file}  > genotypes.vcf
 
     whatshap phase \
         --ignore-read-groups \
