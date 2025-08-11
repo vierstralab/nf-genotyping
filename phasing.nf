@@ -5,6 +5,7 @@ process phasing {
     publishDir "${params.outdir}/phasing"
     label "medmem"
     scratch true
+    tag "${indiv_id}"
 
     input:
         tuple val(indiv_id), path(cram_files), path(cram_indices)
