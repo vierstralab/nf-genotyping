@@ -13,18 +13,18 @@ process phasing {
         tuple val(indiv_id), path(name), path(bed_name), path("${bed_name}.tbi")
 
     script:
-    name = "${indiv_id}.phased.vcf"
+    name = "${indiv_id}.phased.vcf.gz"
     bed_name = "${indiv_id}.phased.bed.gz"
     """
     bcftools view -s ${indiv_id} -e 'GT[*]="alt"' \
-        ${params.genotype_file}  > genotypes.vcf
+        ${params.genotype_file} -Ob  > genotypes.bcf
 
     whatshap phase \
         --ignore-read-groups \
         --sample ${indiv_id} \
         --reference ${params.genome_fasta_file} \
         -o ${name} \
-        genotypes.vcf \
+        genotypes.bcf \
         ${cram_files}
 
     bcftools query -f "%CHROM\t%POS0\t%REF\t%ALT\t[%SAMPLE\t%GT\t%PS]\n" \
