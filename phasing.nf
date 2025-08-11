@@ -19,6 +19,8 @@ process phasing {
     bcftools view -s ${indiv_id} -e 'GT[*]="alt"' \
         ${params.genotype_file} -Ob  > genotypes.bcf
 
+    bcftools index genotypes.bcf
+    
     whatshap phase \
         --ignore-read-groups \
         --sample ${indiv_id} \
