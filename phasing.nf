@@ -18,7 +18,7 @@ process phasing {
     bed_name = "${indiv_id}.phased.bed.gz"
     """
     bcftools view -s ${indiv_id} ${params.genotype_file} -Ou \
-        | bcftools view -e 'GT[*]="ref"' -Ob \
+        | bcftools view -i 'GT[*]="alt"' -Ob \
          > genotypes.bcf
 
     bcftools index genotypes.bcf
