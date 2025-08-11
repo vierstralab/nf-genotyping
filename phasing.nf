@@ -4,7 +4,7 @@ process phasing {
     conda params.conda
     publishDir "${params.outdir}/phasing"
     label "medmem"
-    // scratch true
+    scratch true
 
     input:
         tuple val(indiv_id), path(cram_files), path(cram_indices)
