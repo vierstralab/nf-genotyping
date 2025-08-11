@@ -4,7 +4,7 @@ process phasing {
     conda params.conda
     publishDir "${params.outdir}/phasing"
     label "medmem"
-    scratch true
+    //scratch true
     tag "${indiv_id}"
 
     input:
@@ -21,7 +21,7 @@ process phasing {
         ${params.genotype_file} -Ob  > genotypes.bcf
 
     bcftools index genotypes.bcf
-    
+
     whatshap phase \
         --ignore-read-groups \
         --sample ${indiv_id} \
