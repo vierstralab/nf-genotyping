@@ -18,16 +18,15 @@ process phasing {
     bed_name = "${indiv_id}.phased.bed.gz"
     """
     bcftools view -s ${indiv_id} -e 'GT[*]="alt"' \
-        ${params.genotype_file} -Ob  > genotypes.bcf
+        ${params.genotype_file} -Ob  > genotypes.vcf
 
-    bcftools index genotypes.bcf
 
     whatshap phase \
         --ignore-read-groups \
         --sample ${indiv_id} \
         --reference ${params.genome_fasta_file} \
         -o ${name} \
-        genotypes.bcf \
+        genotypes.vcf \
         ${cram_files}
 
     bcftools query -f "%CHROM\t%POS0\t%REF\t%ALT\t[%SAMPLE\t%GT\t%PS]\n" \
