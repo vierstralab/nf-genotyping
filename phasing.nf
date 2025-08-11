@@ -4,6 +4,7 @@ process phasing {
     conda params.conda
     publishDir "${params.outdir}/genotypes", pattern: "${prefix}.vcf.gz"
     label "medmem"
+    // scratch true
 
     input:
         tuple val(indiv_id), path(cram_files), path(cram_indices)
@@ -16,16 +17,14 @@ process phasing {
     bed_name = "${indiv_id}.phased.bed.gz"
     """
     bcftools view -s ${indiv_id} -e 'GT[*]="alt"' \
-        ${params.genotype_file} -Oz > genotypes.vcf.gz
-    
-    bcftools index genotypes.vcf.gz
+        ${params.genotype_file} -O > genotypes.vcf
 
     whatshap phase \
         --ignore-read-groups \
         --sample ${indiv_id} \
         --reference ${params.genome_fasta_file} \
         -o ${name} \
-        genotypes.vcf.gz \
+        genotypes.vcf \
         ${cram_files}
 
     bcftools query -f "%CHROM\t%POS0\t%REF\t%ALT\t[%SAMPLE\t%GT\t%PS]\n" \
