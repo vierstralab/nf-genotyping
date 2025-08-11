@@ -3,7 +3,7 @@ include { set_key_for_group_tuple } from "./genotyping"
 process phasing {
     conda params.conda
     publishDir "${params.outdir}/phasing"
-    label "medmem"
+    // label "medmem"
     //scratch true
     tag "${indiv_id}"
 
