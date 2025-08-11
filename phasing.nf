@@ -31,10 +31,13 @@ process phasing {
         genotypes.bcf \
         ${cram_files}
 
-    bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t[%SAMPLE\t%GT\t%PS]\n" \
-        ${name} | bgzip -c > ${bed_name}
-    tabix ${bed_name}
+    echo "#chr\tstart\tend\tref\talt\tsample\tgenotype\tphase_set" > tmp.bed
+    bcftools query \
+        -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t[%SAMPLE\t%GT\t%PS]\n" \
+        ${name} >> tmp.bed
 
+    bgzip -c tmp.bed > ${bed_name}
+    tabix ${bed_name}
     """
 }
 
