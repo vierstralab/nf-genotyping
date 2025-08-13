@@ -58,7 +58,7 @@ process merge_bed {
     name = "all_phased.bed.gz"
     """
     # Keep header from first file
-    (zcat ${bed_files[0]} | head -n 1) || true > merged.bed
+    ((zcat ${bed_files[0]} | head -n 1) || true) > merged.bed
 
     # Concat all, skip headers, and sort with sort-bed
     zcat ${bed_files} | grep -v '^#' | sort-bed - >> merged.bed
