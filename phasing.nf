@@ -84,7 +84,7 @@ workflow {
         | set_key_for_group_tuple
         | groupTuple()
 		| phasing
-        | map(it -> it[3])
+        | map(it -> it[2])
         | collect(sort: true, flat: true)
         | merge_bed
 }
