@@ -98,6 +98,7 @@ workflow mergeResults {
             )
         )
 		| filter { !it[0].isEmpty() }
+        | unique()
         | map(it -> it[1])
         | collect(sort: true, flat: true)
         | merge_bed
