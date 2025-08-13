@@ -88,3 +88,17 @@ workflow {
         | collect(sort: true, flat: true)
         | merge_bed
 }
+
+workflow mergeResults {
+    Channel.fromPath(params.samples_file)
+        | splitCsv(header:true, sep:'\t')
+        | map(row -> tuple(
+                row.indiv_id,
+                file("${params.outdir}/phasing/${row.indiv_id}.phased.bed.gz"),
+            )
+        )
+		| filter { !it[0].isEmpty() }
+        | map(it -> it[1])
+        | collect(sort: true, flat: true)
+        | merge_bed
+}
