@@ -87,7 +87,7 @@ process make_iupac_genome {
 }
 
 process scan_with_moods {
-    conda params.conda
+    conda '/home/sabramov/miniconda3/envs/babachi'
     tag "${motif_id}:${genome_type}"
     // scratch true
     publishDir "${params.outdir}/moods_scans_${genome_type}", pattern: "${name}"
