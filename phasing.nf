@@ -1,11 +1,32 @@
 include { set_key_for_group_tuple } from "./genotyping"
 
-process phasing {
+
+process merge_bam {
     conda params.conda
-    publishDir "${params.outdir}/phasing"
-    // label "medmem"
-    //scratch true
-    tag "${indiv_id}"
+    publishDir "${params.outdir}/merged_bam"
+    label "medmem"
+    scratch true
+
+    input:
+        tuple val(indiv_id), path(bam_files), path(bam_indices)
+
+    output:
+        tuple val(indiv_id), path(name), path("${name}.bai")
+
+    script:
+    name = "${indiv_id}.merged.bam"
+    """
+    samtools merge -@ ${task.cpus} -f ${name} ${bam_files}
+    samtools index ${name}
+    """
+}
+
+process phasing {
+        conda params.conda
+        publishDir "${params.outdir}/phasing"
+        // label "medmem"
+        //scratch true
+        tag "${indiv_id}"
 
     input:
         tuple val(indiv_id), path(cram_files), path(cram_indices)
@@ -83,6 +104,7 @@ workflow {
 		| filter { !it[0].isEmpty() }
         | set_key_for_group_tuple
         | groupTuple()
+        | merge_bam
 		| phasing
         | map(it -> it[2])
         | collect(sort: true, flat: true)
