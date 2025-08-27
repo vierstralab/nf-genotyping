@@ -22,11 +22,12 @@ process merge_bam {
 }
 
 process phasing {
-        conda params.conda
-        publishDir "${params.outdir}/phasing"
-        // label "medmem"
-        //scratch true
-        tag "${indiv_id}"
+    conda params.conda
+    publishDir "${params.outdir}/phasing"
+    // label "medmem"
+    //scratch true
+    tag "${indiv_id}"
+    memory { 100.GB + 150.GB * task.attempt }
 
     input:
         tuple val(indiv_id), path(cram_files), path(cram_indices)
