@@ -1,5 +1,5 @@
 import argparse
-import os
+import sys
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -81,6 +81,7 @@ def read_plink(plink_path, clip_cutoff=0.4):
 
 
 if __name__ == '__main__':
+    sys.setrecursionlimit(10000)
     parser = argparse.ArgumentParser(description="Count tags by allele")
     parser.add_argument('plink', type=str, help="Path to plink2 --king result files without (.king/.king.id) suffix")
     parser.add_argument('metadata', type=str, 
