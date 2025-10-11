@@ -22,7 +22,7 @@ process merge_bamfiles {
 		tuple val(indiv_id), path(bam_files, stageAs: "?/*"), path(bam_files_index, stageAs: "?/*")
 
 	output:
-		tuple path(name), path("${name}.crai")
+		tuple val(indiv_id), path(name), path("${name}.crai")
 
 	script:
 	s = indiv_id.size
@@ -286,6 +286,7 @@ workflow genotyping {
 		merged_bamfiles = bam_files
             | groupTuple()
             | merge_bamfiles
+            | map(it -> tuple(it[1], it[2]))
             | flatten()
 			| map(it -> it.toString()) // Get the full path to the file
             | collectFile(name: 'bam_list.txt', newLine: true)
