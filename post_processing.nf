@@ -5,6 +5,7 @@ params.conda = "$moduleDir/environment.yml"
 // Add sort-bed - 
 process extract_variants_from_vcf {
     conda params.conda
+    publishDir "${params.outdir}/genotypes"
     
     publishDir params.outdir
 
@@ -236,6 +237,9 @@ workflow {
     )
 }
 
+workflow variantsFromVCF {
+    extract_variants_from_vcf()
+}
 
 // Extracts the initial reads for all SNPs. This is used for WASP before/after figure
 process extract_initial_reads {

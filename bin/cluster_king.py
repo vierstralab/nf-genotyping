@@ -6,18 +6,23 @@ import seaborn as sns
 from scipy.cluster import hierarchy
 import matplotlib.pyplot as plt
 import subprocess
+from io import StringIO
+
+
+sys.setrecursionlimit(10000)
 
 
 def visualize_clustering(mat, linkage):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
     dendro = hierarchy.dendrogram(linkage, no_plot=False, ax=ax1)
-    g = sns.heatmap(mat.iloc[dendro['leaves'],dendro['leaves']], cmap='Blues',
+    g = sns.heatmap(mat.iloc[dendro['leaves'], dendro['leaves']], cmap='Blues',
         square=True, xticklabels=False, yticklabels=False, cbar=False, ax=ax2)
     for l in ['left','right','top','bottom']:
         g.spines[l].set_visible(True)
         g.spines[l].set_color('k')
     
     return fig, (ax1, ax2)
+
 
 def get_clusters(mat, max_dist=0.1):
     linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
@@ -58,8 +63,6 @@ def read_genotype_stats(bcftools_stats):
         print(f"Error: {stderr.decode()}")
         exit(1)
     
-    # Use the StringIO to simulate a file object from the output bytes
-    from io import StringIO
     output = StringIO(stdout.decode())
 
     # Read the output directly into a pandas DataFrame
@@ -81,7 +84,6 @@ def read_plink(plink_path, clip_cutoff=0.4):
 
 
 if __name__ == '__main__':
-    sys.setrecursionlimit(10000)
     parser = argparse.ArgumentParser(description="Count tags by allele")
     parser.add_argument('plink', type=str, help="Path to plink2 --king result files without (.king/.king.id) suffix")
     parser.add_argument('metadata', type=str, 
