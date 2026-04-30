@@ -151,7 +151,7 @@ process call_genotypes {
 	bcftools annotate \
 		-r ${region} \
 		-a ${params.dbsnp_file} \
-		--columns ID,CAF,TOPMED \
+		--columns ID,FREQ \
 		--output-type z \
   		${region}.filtered.vcf.gz \
 	> ${region}.filtered.annotated.vcf.gz
@@ -212,32 +212,35 @@ process annotate_vcf {
 	name = 'all.filtered.snps.annotated.vcf.gz'
 	"""
 	echo '##INFO=<ID=AA,Number=1,Type=String,Description="Inferred ancestral allele -- EPO/PECAN alignments">' > header.txt
-	echo '##INFO=<ID=AAF,Number=1,Type=Float,Description="TOPMED alternative allele frequency">' >> header.txt
-	echo '##INFO=<ID=RAF,Number=1,Type=Float,Description="TOPMED reference allele frequency">' >> header.txt
+	echo '##INFO=<ID=AAF,Number=1,Type=Float,Description="dbGaP alternative allele frequency">' >> header.txt
+	echo '##INFO=<ID=RAF,Number=1,Type=Float,Description="dbGaP reference allele frequency">' >> header.txt
 	
 	# Get SNPs in BED-format
 	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\n" \
 		snps.vcf.gz | sort-bed - > all.filtered.snps.bed
 
 	# Get ancestral allele from FASTA file and make a TABIX file
-	faidx -i chromsizes ${params.genome_ancestral_fasta_file} | cut -f1 > chroms.txt
+	cp ${params.genome_ancestral_fasta_file} .
+        cp ${params.genome_ancestral_fasta_file}.fai .
+ 
+	cut -f1 homo_sapiens_ancestor.fixed.fa.fai > chroms.txt
 
 	cat all.filtered.snps.bed | grep -w -f chroms.txt | sort-bed - > ancestral_chrs.snps.bed
 	faidx -i transposed \
 		-b ancestral_chrs.snps.bed \
-		${params.genome_ancestral_fasta_file} \
+		homo_sapiens_ancestor.fixed.fa \
 		| paste - ancestral_chrs.snps.bed	\
 		| awk -v OFS="\t" '{ print \$5, \$6, \$7, \$8, \$9, \$4; }' \
 		| bgzip -c > ancestral.allele.annotation.bed.gz
 	
-	bcftools query -f "%CHROM\t%POS0\t%POS\t%REF\t%ALT\t%INFO/TOPMED\n" ${params.dbsnp_file} \
+	python3 /home/jvierstra/data/dbsnp/v157/parse_popfreqs.py ${params.dbsnp_file} \
 		| sort-bed - \
 		| bedtools intersect -a stdin -b all.filtered.snps.bed -sorted -wa \
 		| uniq \
 		| bgzip -c > dbsnp_annotations.bed.gz
 
-	# Add TOPMED freqs annotation
-	python3 $moduleDir/bin/explode_topmed_annotations.py \
+	# Add dbGaP freqs annotation
+	python3 $moduleDir/bin/explode_dbgap_annotations.py \
 		ancestral.allele.annotation.bed.gz dbsnp_annotations.bed.gz all.filtered.snps.bed annot.bed
 	sort-bed annot.bed \
 		| bgzip -c > all.filtered.snps.annotations.bed.gz
@@ -255,6 +258,9 @@ process annotate_vcf {
 	> ${name}
 	
 	bcftools index ${name}
+
+        #Clean-up
+        #rm homo_sapiens_ancestor.fixed.fa homo_sapiens_ancestor.fixed.fa.fai
 	"""
 }
 

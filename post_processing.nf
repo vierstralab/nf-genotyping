@@ -124,6 +124,7 @@ process distance_to_dhs {
     echo -e "#chr\tstart\tend\tID\tref\talt\ttopmed\tmaf\tindex_chr\tindex_start\tindex_end\tdhs_id\tdistance\tis_genotyped" > ${name}
     
     tail -n+2 ${params.dbsnp_common_bed} \
+        | cut -f1-8 \
         | closest-features \
         --closest \
         --dist \
@@ -161,11 +162,12 @@ process genomic_annotations {
     bash $moduleDir/bin/gencodeAnnotations.sh \
         variants.no_header.bed \
         ${params.gencode} \
-        ${params.genome_chrom_sizes}
+        ${params.genome_chrom_sizes} \
+        gencode_annotations.txt
 
     # Pasting all together
-    paste <(head -1 ${variants}) <(cat gencodeAnnotations_header.txt) > ${name}
-    paste variants.no_header.bed gencode_annotations.txt >> ${name}
+    paste <(head -1 ${variants}) <(head -1 gencode_annotations.txt) > ${name}
+    paste variants.no_header.bed <(tail -n +2 gencode_annotations.txt) >> ${name}
     """
 }
 
