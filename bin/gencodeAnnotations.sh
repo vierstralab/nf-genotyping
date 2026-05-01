@@ -1,1 +1,1 @@
-../pipelines/nf-index/bin/annotations/gencodeAnnotations.sh
+/home/nasi4/proj/encode4-plus/nf-index/bin/annotations/gencodeAnnotations.sh
