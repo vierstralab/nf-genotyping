@@ -5,8 +5,6 @@ params.conda = "$moduleDir/environment.yml"
 // Add sort-bed - 
 process extract_variants_from_vcf {
     conda params.conda
-    publishDir "${params.outdir}/genotypes"
-    
     publishDir params.outdir
 
     output:
