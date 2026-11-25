@@ -4,7 +4,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.8
+  - python=3.10
   - pysam
   - bedops
   - bcftools=1.15
@@ -17,4 +17,7 @@ dependencies:
   - fastp
   - picard
   - tectonic
+  - pip
+  - pip:
+    - git+https://github.com/vierstralab/genome-tools.git@development
 prefix: /home/sabramov/miniconda3/envs/babachi

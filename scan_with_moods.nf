@@ -11,6 +11,7 @@ process motif_counts {
     tag "${motif_id}:${genome_type}"
     conda params.conda
     publishDir "${params.outdir}/motif_counts_${genome_type}"
+    scratch true
 
     input:
         tuple val(genome_type), val(motif_id), path(pwm_path), path(moods_file), path(variants)
@@ -19,10 +20,9 @@ process motif_counts {
         tuple val(genome_type), path(counts_file)
 
     script:
-    counts_file = "${motif_id}.counts.bed"
+    counts_file = "${motif_id}.counts.bed.gz"
+    bg_param = file(params.bg_file).exists() ? "--bg ${params.bg_file}" : ""
     """
-    
-    echo -e "#chr\tstart\tend\tID\tref\talt\tmotif\toffset\twithin\tstrand\tref_score\talt_score\tseq" > ${counts_file}
     zcat ${moods_file} \
         | bedmap \
             --skip-unmapped \
@@ -33,10 +33,14 @@ process motif_counts {
             --echo \
             --echo-map <(cut -f1-6 ${variants} | grep -v '#') \
             - \
-        | python3 $projectDir/bin/parse_variants_motifs.py \
-            ${params.genome_fasta_file} \
-            ${pwm_path} \
-        >> ${counts_file}
+        > variants_motifs.txt
+
+    python3 $projectDir/bin/parse_variants_motifs.py \
+        ${params.genome_fasta_file} \
+        ${pwm_path} \
+        variants_motifs.txt \
+        ${counts_file} \
+        ${bg_param}
     """
 }
 
@@ -56,8 +60,9 @@ process tabix_index {
     script:
     name = "${genome_type}.motif_hits.merged.bed.gz"
     """
-    head -1 ${counts[0]} > tmp.bed
-    cat ${counts} \
+    # head closes the pipe early -> zcat gets SIGPIPE, fails under pipefail
+    { zcat ${counts[0]} | head -1 || true; } > tmp.bed
+    zcat ${counts} \
         | awk '\$9 == "True"' > sign_hits.bed
 
     sort-bed sign_hits.bed >> tmp.bed
