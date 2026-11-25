@@ -1,86 +1,23 @@
 import argparse
-import sys
-import numpy as np
 import pandas as pd
-import seaborn as sns
-from scipy.cluster import hierarchy
 import matplotlib.pyplot as plt
-import subprocess
-from io import StringIO
 
-
-sys.setrecursionlimit(10000)
-
-
-def visualize_clustering(mat, linkage):
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 10))
-    dendro = hierarchy.dendrogram(linkage, no_plot=False, ax=ax1)
-    g = sns.heatmap(mat.iloc[dendro['leaves'], dendro['leaves']], cmap='Blues',
-        square=True, xticklabels=False, yticklabels=False, cbar=False, ax=ax2)
-    for l in ['left','right','top','bottom']:
-        g.spines[l].set_visible(True)
-        g.spines[l].set_color('k')
-    
-    return fig, (ax1, ax2)
-
-
-def get_clusters(mat, max_dist=0.1):
-    linkage = hierarchy.linkage(mat, method='complete', metric='correlation')
-    cl = hierarchy.fcluster(linkage, max_dist, criterion='distance')
-
-    clusters = pd.DataFrame({'indiv_id': mat.index, 'cluster_id': cl})
-
-    frequency = clusters['cluster_id'].value_counts().reset_index().reset_index(names='genotype_cluster')
-    clusters = clusters.merge(frequency, on='cluster_id').sort_values(by='count', ascending=False)
-
-    clusters['new_id'] = 'INDIV_' + (clusters['genotype_cluster'] + 1).astype(str).str.zfill(4)
-    return clusters, linkage, cl
+from genome_tools.data.genotypes import read_king_matrix, read_bcftools_psc, cluster_relatedness
+from genome_tools.plotting.relatedness import relatedness_heatmap
 
 
 def main(mat, stats, genotyping_meta, min_variants=1000):
     good_ids = stats.query(f'(nHets + nNonRefHom) >= {min_variants}')['indiv_id'].tolist()
-    clusters, linkage, _ = get_clusters(mat.loc[good_ids, good_ids])
+    mat = mat.loc[good_ids, good_ids]
+    clusters, linkage = cluster_relatedness(mat)
 
     result = genotyping_meta.merge(
-        clusters[['indiv_id', 'new_id']],
+        clusters[['indiv_id', 'clustered_indiv_id']],
         how='left'
     ).rename(
-        columns={'indiv_id': 'old_indiv_id', 'new_id': 'indiv_id'},
+        columns={'indiv_id': 'old_indiv_id', 'clustered_indiv_id': 'indiv_id'},
     )
     return mat, linkage, result
-
-
-def read_genotype_stats(bcftools_stats):
-    # Construct the grep command to filter the desired lines directly
-    cmd = f"grep 'PSC' {bcftools_stats} | tail -n+2"
-    
-    # Run the command and capture the output
-    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-
-    # Check for errors in stderr to handle cases where the command fails
-    if stderr:
-        print(f"Error: {stderr.decode()}")
-        exit(1)
-    
-    output = StringIO(stdout.decode())
-
-    # Read the output directly into a pandas DataFrame
-    stats = pd.read_table(output)
-    stats = stats.iloc[:, 2:]
-    stats.columns = stats.columns.str.replace(r"(\[.*\])", "", regex=True)
-    stats.rename(columns={'sample': 'indiv_id'}, inplace=True)
-    
-    return stats
-
-
-def read_plink(plink_path, clip_cutoff=0.4):
-    indivs = np.loadtxt(f'{plink_path}.king.id', skiprows=0, dtype=str)
-    rel_mat = np.loadtxt(f'{plink_path}.king')
-    mat = pd.DataFrame(rel_mat, index=indivs, columns=indivs)
-    mat[mat < clip_cutoff] = 0
-    mat[np.isnan(mat)] = 0
-    return mat
 
 
 if __name__ == '__main__':
@@ -100,8 +37,8 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
-    matrix = read_plink(args.plink)
-    stats = read_genotype_stats(args.stats)
+    matrix = read_king_matrix(args.plink)
+    stats = read_bcftools_psc(args.stats)
     
     metadata = pd.read_table(args.metadata, dtype={'indiv_id': str})
     
@@ -113,9 +50,8 @@ if __name__ == '__main__':
         sep='\t'
     )
 
-    fig, axes = visualize_clustering(
-        mat, linkage,   
-    )
+    fig, (ax_dendrogram, ax) = plt.subplots(2, 1, figsize=(6, 10))
+    relatedness_heatmap(mat, linkage, ax=ax, ax_dendrogram=ax_dendrogram)
     fig.savefig(f"{args.outpath}/clustering.pdf", bbox_inches='tight', transparent=True)
     plt.close(fig)
 
